@@ -130,7 +130,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
               setFile(null);
             }}
             className={`flex-1 rounded-full py-1.5 font-medium ${
-              type === t ? "bg-white shadow text-indigo-700" : "text-zinc-500"
+              type === t ? "bg-white shadow text-[#0095F6]" : "text-zinc-500"
             }`}
           >
             {TYPE_LABELS[t]}
@@ -157,6 +157,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
 
       {type === "link" ? (
         <input
+          key="link-input"
           type="url"
           placeholder="https://..."
           value={linkUrl}
@@ -166,6 +167,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
         />
       ) : (
         <input
+          key="file-input"
           type="file"
           accept={type === "image" ? "image/*" : type === "video" ? "video/*" : "audio/*"}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
@@ -178,7 +180,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-indigo-600 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="w-full rounded-md bg-[#0095F6] py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {loading ? "업로드 중..." : "업로드"}
       </button>

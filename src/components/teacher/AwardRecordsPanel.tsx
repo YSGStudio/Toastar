@@ -16,9 +16,11 @@ interface AwardRow {
 export function AwardRecordsPanel({
   closedPeriods,
   awards,
+  canManage,
 }: {
   closedPeriods: Period[];
   awards: AwardRow[];
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [periodId, setPeriodId] = useState(closedPeriods[0]?.id ?? "");
@@ -50,28 +52,30 @@ export function AwardRecordsPanel({
     <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-base font-bold">시상 기록</h2>
 
-      <div className="flex gap-2">
-        <select
-          value={periodId}
-          onChange={(e) => setPeriodId(e.target.value)}
-          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        >
-          {closedPeriods.length === 0 && <option value="">종료된 기간이 없습니다</option>}
-          {closedPeriods.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.start_date} ~ {p.end_date}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={handleCompute}
-          disabled={!periodId || loading}
-          className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {loading ? "집계 중..." : "시상 집계"}
-        </button>
-      </div>
+      {canManage && (
+        <div className="flex gap-2">
+          <select
+            value={periodId}
+            onChange={(e) => setPeriodId(e.target.value)}
+            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          >
+            {closedPeriods.length === 0 && <option value="">종료된 기간이 없습니다</option>}
+            {closedPeriods.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.start_date} ~ {p.end_date}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleCompute}
+            disabled={!periodId || loading}
+            className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {loading ? "집계 중..." : "시상 집계"}
+          </button>
+        </div>
+      )}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <ul className="space-y-2">

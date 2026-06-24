@@ -15,18 +15,26 @@ export default async function SettingsPage({
   if (!user || user.role !== "teacher") redirect("/login");
 
   const supabase = await createSupabaseServerClient();
-  const { data: classes } = await supabase
-    .from("classes")
-    .select("*")
-    .eq("teacher_id", user.id)
-    .order("created_at", { ascending: true });
+  const isAdmin = user.accountRole === "admin";
 
-  if (!classes || classes.length === 0) redirect("/dashboard/classes/new");
+  const classesQuery = supabase.from("classes").select("*").order("created_at", { ascending: true });
+  const { data: classes } = isAdmin ? await classesQuery : await classesQuery.eq("teacher_id", user.id);
+
+  if (!classes || classes.length === 0) {
+    if (isAdmin) {
+      return (
+        <p className="py-20 text-center text-sm text-zinc-400">
+          아직 생성된 학급이 없습니다. 교사가 먼저 학급을 생성해야 관리할 수 있어요.
+        </p>
+      );
+    }
+    redirect("/dashboard/classes/new");
+  }
 
   const { classId } = await searchParams;
   const classRow = (classes.find((c) => c.id === classId) ?? classes[0]) as ClassRow;
 
-  const [periods, { data: loginBlockRules }, { data: awards }] = await Promise.all([
+  const [periods, { data: loginBlockRules }, { data: awards }, { data: students }] = await Promise.all([
     fetchPeriods({ classId: classRow.id }),
     supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
     supabase
@@ -34,16 +42,19 @@ export default async function SettingsPage({
       .select("*, artworks(title), students(name), periods(start_date, end_date)")
       .eq("class_id", classRow.id)
       .order("awarded_at", { ascending: false }),
+    supabase.from("students").select("*").eq("class_id", classRow.id).order("name", { ascending: true }),
   ]);
 
   return (
     <div className="space-y-4">
       <ClassSwitcher classes={classes as ClassRow[]} selectedId={classRow.id} />
       <SettingsTabs
+        accountRole={user.accountRole}
         classRow={classRow}
         periods={periods}
         loginBlockRules={(loginBlockRules ?? []) as LoginBlockRule[]}
         awards={awards ?? []}
+        students={students ?? []}
       />
     </div>
   );

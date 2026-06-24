@@ -4,9 +4,10 @@ import {
   getStudentSession,
   getStudentSessionToken,
 } from "@/lib/auth/studentSession";
+import type { AccountRole } from "@/types/database";
 
 export type CurrentUser =
-  | { role: "teacher"; id: string; email: string; name: string }
+  | { role: "teacher"; accountRole: AccountRole; id: string; email: string; name: string }
   | { role: "student"; studentId: string; classId: string; name: string };
 
 /** 현재 요청의 로그인 주체를 판별한다. 교사(Supabase Auth)를 우선 확인하고, 없으면 학생 쿠키를 본다. */
@@ -16,11 +17,17 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (data.user) {
     const { data: teacher } = await supabase
       .from("teachers")
-      .select("id, email, name")
+      .select("id, email, name, role")
       .eq("id", data.user.id)
       .maybeSingle();
     if (teacher) {
-      return { role: "teacher", id: teacher.id, email: teacher.email, name: teacher.name };
+      return {
+        role: "teacher",
+        accountRole: teacher.role,
+        id: teacher.id,
+        email: teacher.email,
+        name: teacher.name,
+      };
     }
   }
 

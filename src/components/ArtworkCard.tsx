@@ -1,11 +1,12 @@
 "use client";
 
+import { HeartIcon } from "@/components/icons";
 import type { ArtworkListItem } from "@/types/client";
 
 function ThumbnailFallback({ type }: { type: ArtworkListItem["type"] }) {
   const icon = { audio: "🎵", link: "🔗", video: "🎬", image: "🖼️" }[type];
   return (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-4xl">
+    <div className="flex h-full w-full items-center justify-center bg-zinc-300 text-3xl">
       {icon}
     </div>
   );
@@ -24,19 +25,19 @@ export function ArtworkCard({
 }) {
   return (
     <div
-      className={`group overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-zinc-200 transition hover:shadow-md ${
-        artwork.is_winner ? "ring-2 ring-amber-400 shadow-amber-200" : ""
+      className={`overflow-hidden rounded-md bg-zinc-200 ${
+        artwork.is_winner ? "ring-2 ring-amber-400" : ""
       }`}
     >
       <button
         type="button"
         onClick={onOpen}
-        className="relative block aspect-square w-full overflow-hidden bg-zinc-100"
+        className="relative block aspect-square w-full overflow-hidden bg-zinc-300"
         onContextMenu={(e) => e.preventDefault()}
       >
         {artwork.is_winner && (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-white shadow">
-            👑 수상작
+          <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+            👑
           </span>
         )}
         {artwork.thumbnail_url ? (
@@ -45,27 +46,26 @@ export function ArtworkCard({
             src={artwork.thumbnail_url}
             alt={artwork.title}
             draggable={false}
-            className={`h-full w-full object-cover select-none ${
-              artwork.is_winner ? "animate-pulse" : ""
-            }`}
+            className="h-full w-full select-none object-cover"
           />
         ) : (
           <ThumbnailFallback type={artwork.type} />
         )}
       </button>
-      <div className="p-3">
-        <p className="truncate text-sm font-semibold">{artwork.title}</p>
-        <div className="mt-1 flex items-center justify-between">
-          <span className="truncate text-xs text-zinc-500">{artwork.students?.name ?? "익명"}</span>
+      <div className="px-1.5 py-1.5">
+        <p className="truncate text-xs font-semibold text-zinc-900">{artwork.title}</p>
+        <div className="mt-0.5 flex items-center justify-between">
+          <span className="truncate text-[11px] text-zinc-600">{artwork.students?.name ?? "익명"}</span>
           <button
             type="button"
             disabled={!canLike}
             onClick={onToggleLike}
-            className={`flex items-center gap-1 text-xs font-medium ${
-              artwork.liked_by_me ? "text-rose-500" : "text-zinc-400"
+            className={`flex shrink-0 items-center gap-0.5 text-[11px] font-medium ${
+              artwork.liked_by_me ? "text-[#ED4956]" : "text-zinc-500"
             } ${canLike ? "cursor-pointer" : "cursor-default"}`}
           >
-            {artwork.liked_by_me ? "♥" : "♡"} {artwork.like_count}
+            <HeartIcon filled={artwork.liked_by_me} className="h-3.5 w-3.5" />
+            {artwork.like_count}
           </button>
         </div>
       </div>

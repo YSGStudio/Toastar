@@ -4,8 +4,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 export async function PUT(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "teacher") {
-    return NextResponse.json({ error: "교사만 접근할 수 있습니다." }, { status: 403 });
+  if (!user || user.role !== "teacher" || user.accountRole !== "admin") {
+    return NextResponse.json({ error: "관리자만 로그인 차단 시간을 설정할 수 있습니다." }, { status: 403 });
   }
 
   const { classId, rules } = await req.json() as {

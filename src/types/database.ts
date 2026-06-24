@@ -1,11 +1,13 @@
 export type ArtworkType = "image" | "link" | "video" | "audio";
 export type PeriodStatus = "active" | "closed";
 export type DayType = "weekday" | "weekend";
+export type AccountRole = "admin" | "teacher";
 
 export interface Teacher {
   id: string;
   email: string;
   name: string;
+  role: AccountRole;
   created_at: string;
 }
 

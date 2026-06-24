@@ -23,9 +23,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "교사만 접근할 수 있습니다." }, { status: 403 });
   }
 
-  const { name, startDate, endDate } = await req.json();
-  if (!name || !startDate || !endDate) {
-    return NextResponse.json({ error: "학급 이름과 첫 운영 기간을 입력해 주세요." }, { status: 400 });
+  const { name } = await req.json();
+  if (!name) {
+    return NextResponse.json({ error: "학급 이름을 입력해 주세요." }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();
@@ -54,16 +54,6 @@ export async function POST(req: NextRequest) {
       { error: lastError?.message ?? "학급 코드 생성에 실패했습니다. 다시 시도해 주세요." },
       { status: 400 },
     );
-  }
-
-  const { error: periodError } = await supabase.from("periods").insert({
-    class_id: classRow.id,
-    start_date: startDate,
-    end_date: endDate,
-    status: "active",
-  });
-  if (periodError) {
-    return NextResponse.json({ error: periodError.message }, { status: 400 });
   }
 
   return NextResponse.json({ class: classRow });

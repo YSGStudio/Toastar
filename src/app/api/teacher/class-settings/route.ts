@@ -4,8 +4,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 export async function PATCH(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "teacher") {
-    return NextResponse.json({ error: "교사만 접근할 수 있습니다." }, { status: 403 });
+  if (!user || user.role !== "teacher" || user.accountRole !== "admin") {
+    return NextResponse.json({ error: "관리자만 하트 정책을 변경할 수 있습니다." }, { status: 403 });
   }
 
   const { classId, dailyHeartLimit, awardTopN } = await req.json();

@@ -19,6 +19,7 @@ export default async function LatestPage() {
         initialArtworks={artworks}
         fetchUrl="/api/artworks?scope=latest"
         canLike={user.role === "student"}
+        currentStudentId={user.role === "student" ? user.studentId : null}
         emptyMessage="아직 게시된 작품이 없어요."
       />
     </div>

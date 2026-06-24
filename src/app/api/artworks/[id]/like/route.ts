@@ -9,6 +9,16 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const client = await getScopedSupabaseClient(user);
 
+  const { data: artwork } = await client
+    .from("artworks")
+    .select("student_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (artwork?.student_id === user.studentId) {
+    return NextResponse.json({ error: "자신의 작품에는 하트를 줄 수 없어요." }, { status: 400 });
+  }
+
   const { error } = await client
     .from("artwork_likes")
     .insert({ artwork_id: id, student_id: user.studentId });

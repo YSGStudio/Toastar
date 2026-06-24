@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
+import { HeartBadge } from "@/components/HeartBadge";
 import type { CurrentUser } from "@/lib/auth/session";
 
 export function DashboardNav({ user }: { user: CurrentUser }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <div className="flex items-center gap-4">
-          <span className="text-lg font-bold">학생 작품 전시</span>
-          <nav className="flex gap-1 text-sm">
+    <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white">
+      <div className="mx-auto flex h-[52px] max-w-6xl items-center justify-between gap-4 px-4">
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard/latest" className="font-serif text-2xl italic text-zinc-900">
+            Toastar
+          </Link>
+          <nav className="hidden gap-1 text-sm sm:flex">
             <Link href="/dashboard/latest" className="rounded-md px-3 py-1.5 font-medium hover:bg-zinc-100">
               최신 자료
             </Link>
@@ -23,9 +26,10 @@ export function DashboardNav({ user }: { user: CurrentUser }) {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-zinc-500">
+          <HeartBadge />
+          <span className="hidden text-sm text-zinc-500 sm:inline">
             {user.name}
-            {user.role === "teacher" ? " 선생님" : " 학생"}
+            {user.role === "teacher" ? (user.accountRole === "admin" ? " 관리자" : " 선생님") : " 학생"}
           </span>
           <LogoutButton role={user.role} />
         </div>

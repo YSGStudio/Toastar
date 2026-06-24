@@ -8,33 +8,34 @@ export default function LoginPage() {
   const [role, setRole] = useState<"student" | "teacher">("student");
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
-        <h1 className="mb-1 text-center text-xl font-bold">학생 작품 전시</h1>
-        <p className="mb-6 text-center text-sm text-zinc-500">교내 전용 SNS</p>
-
-        <div className="mb-6 flex gap-2 rounded-full bg-zinc-100 p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setRole("student")}
-            className={`flex-1 rounded-full py-2 font-medium transition ${
-              role === "student" ? "bg-white shadow text-emerald-700" : "text-zinc-500"
-            }`}
-          >
-            학생
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("teacher")}
-            className={`flex-1 rounded-full py-2 font-medium transition ${
-              role === "teacher" ? "bg-white shadow text-indigo-700" : "text-zinc-500"
-            }`}
-          >
-            교사
-          </button>
-        </div>
+    <div className="flex flex-1 items-center justify-center bg-white px-4">
+      <div className="w-full max-w-[350px]">
+        <h1 className="mb-1 text-center font-serif text-4xl italic tracking-tight text-zinc-900">
+          Toastar
+        </h1>
+        <p className="mb-8 text-center text-sm text-zinc-500">교내 전용 학생 작품 전시</p>
 
         {role === "student" ? <StudentLoginForm /> : <TeacherAuthForm />}
+
+        <div className="mt-6 border-t border-zinc-200 pt-4 text-center text-sm">
+          {role === "student" ? (
+            <button
+              type="button"
+              onClick={() => setRole("teacher")}
+              className="font-medium text-[#0095F6]"
+            >
+              교사로 로그인 / 가입
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRole("student")}
+              className="font-medium text-[#0095F6]"
+            >
+              학생으로 로그인
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

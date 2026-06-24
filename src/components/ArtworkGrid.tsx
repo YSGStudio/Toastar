@@ -4,27 +4,35 @@ import { useState } from "react";
 import { ArtworkCard } from "@/components/ArtworkCard";
 import { ArtworkDetailModal } from "@/components/ArtworkDetailModal";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { useHeart } from "@/components/HeartContext";
 import type { ArtworkListItem } from "@/types/client";
 
 export function ArtworkGrid({
   initialArtworks,
   fetchUrl,
   canLike,
+  currentStudentId,
   emptyMessage,
 }: {
   initialArtworks: ArtworkListItem[];
   fetchUrl: string;
   canLike: boolean;
+  currentStudentId?: string | null;
   emptyMessage: string;
 }) {
   const [artworks, setArtworks] = useState(initialArtworks);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const [prevInitialArtworks, setPrevInitialArtworks] = useState(initialArtworks);
+  const { decrementHeart, incrementHeart } = useHeart();
 
   if (initialArtworks !== prevInitialArtworks) {
     setPrevInitialArtworks(initialArtworks);
     setArtworks(initialArtworks);
+  }
+
+  function canLikeArtwork(artwork: ArtworkListItem) {
+    return canLike && artwork.student_id !== currentStudentId;
   }
 
   async function refresh() {
@@ -36,7 +44,7 @@ export function ArtworkGrid({
   }
 
   async function toggleLike(artwork: ArtworkListItem) {
-    if (!canLike) return;
+    if (!canLikeArtwork(artwork)) return;
     setLimitMessage(null);
 
     const liked = artwork.liked_by_me;
@@ -47,6 +55,10 @@ export function ArtworkGrid({
           : a,
       ),
     );
+    // 좋아요 취소는 하트를 환불하지 않으므로(스팸 방지), 좋아요를 누를 때만 차감한다.
+    if (!liked) {
+      decrementHeart();
+    }
 
     const res = await fetch(`/api/artworks/${artwork.id}/like`, {
       method: liked ? "DELETE" : "POST",
@@ -61,6 +73,9 @@ export function ArtworkGrid({
             : a,
         ),
       );
+      if (!liked) {
+        incrementHeart();
+      }
       if (data.code === "DAILY_LIMIT") {
         setLimitMessage("오늘 하트를 모두 사용했어요");
       }
@@ -79,12 +94,12 @@ export function ArtworkGrid({
       {artworks.length === 0 ? (
         <p className="py-20 text-center text-sm text-zinc-400">{emptyMessage}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-6">
           {artworks.map((artwork) => (
             <ArtworkCard
               key={artwork.id}
               artwork={artwork}
-              canLike={canLike}
+              canLike={canLikeArtwork(artwork)}
               onOpen={() => setSelectedId(artwork.id)}
               onToggleLike={() => toggleLike(artwork)}
             />
@@ -95,7 +110,7 @@ export function ArtworkGrid({
       {selected && (
         <ArtworkDetailModal
           artwork={selected}
-          canLike={canLike}
+          canLike={canLikeArtwork(selected)}
           onClose={() => setSelectedId(null)}
           onToggleLike={() => toggleLike(selected)}
         />

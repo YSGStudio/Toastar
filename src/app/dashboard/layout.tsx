@@ -1,15 +1,25 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getHeartStatus } from "@/lib/heartStatus";
 import { DashboardNav } from "@/components/DashboardNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
+import { HeartProvider } from "@/components/HeartContext";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const heartStatus = await getHeartStatus(user);
+
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50">
-      <DashboardNav user={user} />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-    </div>
+    <HeartProvider initial={heartStatus}>
+      <div className="flex flex-1 flex-col bg-white">
+        <DashboardNav user={user} />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-4 pb-20 sm:px-4 sm:py-6 sm:pb-6">
+          {children}
+        </main>
+        <BottomTabBar user={user} />
+      </div>
+    </HeartProvider>
   );
 }

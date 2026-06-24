@@ -1,6 +1,14 @@
 "use client";
 
+import { HeartIcon, ShareIcon } from "@/components/icons";
 import type { ArtworkListItem } from "@/types/client";
+
+const AVATAR_COLORS = ["#F58529", "#DD2A7B", "#8134AF", "#515BD4", "#0095F6", "#00A86B"];
+
+function avatarColor(name: string) {
+  const code = name.charCodeAt(0) || 0;
+  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
 
 export function ArtworkDetailModal({
   artwork,
@@ -13,17 +21,32 @@ export function ArtworkDetailModal({
   onClose: () => void;
   onToggleLike: () => void;
 }) {
+  const authorName = artwork.students?.name ?? "익명";
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl"
+        className="flex max-h-full w-full max-w-md flex-col overflow-y-auto bg-white sm:max-h-[90vh] sm:rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ backgroundColor: avatarColor(authorName) }}
+            >
+              {authorName.slice(0, 1)}
+            </span>
+            <span className="text-sm font-semibold text-zinc-900">{authorName}</span>
+            {artwork.is_winner && <span className="text-xs">👑 수상작</span>}
+          </div>
+          <button type="button" onClick={onClose} className="px-2 text-xl text-zinc-400">
+            ×
+          </button>
+        </div>
+
         <div
-          className="flex max-h-[60vh] items-center justify-center bg-zinc-100"
+          className="flex aspect-square items-center justify-center bg-zinc-100"
           onContextMenu={(e) => e.preventDefault()}
         >
           {artwork.type === "image" && (
@@ -32,7 +55,7 @@ export function ArtworkDetailModal({
               src={artwork.file_url}
               alt={artwork.title}
               draggable={false}
-              className="max-h-[60vh] w-auto select-none object-contain"
+              className="h-full w-full select-none object-contain"
             />
           )}
           {artwork.type === "video" && (
@@ -40,7 +63,7 @@ export function ArtworkDetailModal({
               src={artwork.file_url}
               controls
               controlsList="nodownload"
-              className="max-h-[60vh] w-full"
+              className="h-full w-full object-contain"
             />
           )}
           {artwork.type === "audio" && (
@@ -61,43 +84,34 @@ export function ArtworkDetailModal({
                 href={artwork.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all text-sm font-medium text-indigo-600 underline"
+                className="flex items-center gap-1 break-all text-sm font-medium text-[#0095F6]"
               >
+                <ShareIcon className="h-4 w-4 shrink-0" />
                 {artwork.file_url}
               </a>
             </div>
           )}
         </div>
 
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold">{artwork.title}</h2>
-              <p className="text-sm text-zinc-500">{artwork.students?.name ?? "익명"}</p>
-            </div>
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-4 py-1">
             <button
               type="button"
               disabled={!canLike}
               onClick={onToggleLike}
-              className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium ${
-                artwork.liked_by_me
-                  ? "border-rose-300 bg-rose-50 text-rose-500"
-                  : "border-zinc-300 text-zinc-500"
-              }`}
+              className={artwork.liked_by_me ? "text-[#ED4956]" : "text-zinc-900"}
             >
-              {artwork.liked_by_me ? "♥" : "♡"} {artwork.like_count}
+              <HeartIcon filled={artwork.liked_by_me} className="h-7 w-7" />
             </button>
           </div>
+          <p className="text-sm font-semibold text-zinc-900">좋아요 {artwork.like_count}개</p>
+          <p className="mt-1 text-sm text-zinc-900">
+            <span className="font-semibold">{authorName}</span>{" "}
+            <span className="font-medium">{artwork.title}</span>
+          </p>
           {artwork.description && (
-            <p className="mt-3 whitespace-pre-wrap text-sm text-zinc-700">{artwork.description}</p>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.description}</p>
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-5 w-full rounded-md bg-zinc-100 py-2 text-sm font-medium text-zinc-600"
-          >
-            닫기
-          </button>
         </div>
       </div>
     </div>

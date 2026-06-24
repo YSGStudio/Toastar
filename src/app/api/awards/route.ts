@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "teacher") {
-    return NextResponse.json({ error: "교사만 시상을 집계할 수 있습니다." }, { status: 403 });
+  if (!user || user.role !== "teacher" || user.accountRole !== "admin") {
+    return NextResponse.json({ error: "관리자만 시상을 집계할 수 있습니다." }, { status: 403 });
   }
 
   const { periodId } = await req.json();

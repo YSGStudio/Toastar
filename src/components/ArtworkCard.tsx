@@ -25,14 +25,18 @@ export function ArtworkCard({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-md bg-zinc-200 ${
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onOpen();
+      }}
+      className={`cursor-pointer overflow-hidden rounded-md bg-zinc-200 ${
         artwork.is_winner ? "ring-2 ring-amber-400" : ""
       }`}
     >
-      <button
-        type="button"
-        onClick={onOpen}
-        className="relative block aspect-square w-full overflow-hidden bg-zinc-300"
+      <div
+        className="relative aspect-square w-full overflow-hidden bg-zinc-300"
         onContextMenu={(e) => e.preventDefault()}
       >
         {artwork.is_winner && (
@@ -51,7 +55,7 @@ export function ArtworkCard({
         ) : (
           <ThumbnailFallback type={artwork.type} />
         )}
-      </button>
+      </div>
       <div className="px-1.5 py-1.5">
         <p className="truncate text-xs font-semibold text-zinc-900">{artwork.title}</p>
         <div className="mt-0.5 flex items-center justify-between">
@@ -59,7 +63,10 @@ export function ArtworkCard({
           <button
             type="button"
             disabled={!canLike}
-            onClick={onToggleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleLike();
+            }}
             className={`flex shrink-0 items-center gap-0.5 text-[11px] font-medium ${
               artwork.liked_by_me ? "text-[#ED4956]" : "text-zinc-500"
             } ${canLike ? "cursor-pointer" : "cursor-default"}`}

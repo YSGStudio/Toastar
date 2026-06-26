@@ -6,7 +6,7 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  if (user.role === "teacher") {
+  if (user.role === "teacher" && user.accountRole !== "admin") {
     const supabase = await createSupabaseServerClient();
     const { count } = await supabase
       .from("classes")

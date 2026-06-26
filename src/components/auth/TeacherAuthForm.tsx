@@ -34,8 +34,7 @@ export function TeacherAuthForm() {
         setError(data.error ?? "처리 중 오류가 발생했습니다.");
         return;
       }
-      router.push("/");
-      router.refresh();
+      router.replace("/");
     } finally {
       setLoading(false);
     }

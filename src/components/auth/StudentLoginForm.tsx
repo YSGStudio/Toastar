@@ -38,8 +38,7 @@ export function StudentLoginForm() {
         return;
       }
       localStorage.setItem(LAST_CLASS_CODE_KEY, classCode);
-      router.push("/");
-      router.refresh();
+      router.replace("/dashboard/latest");
     } finally {
       setLoading(false);
     }

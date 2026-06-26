@@ -19,25 +19,19 @@ export async function getHeartStatus(
 
   const client = await getScopedSupabaseClient(user);
 
-  const { data: classRow } = await client
-    .from("classes")
-    .select("daily_heart_limit")
-    .eq("id", user.classId)
-    .maybeSingle();
+  const [{ data: classRow }, { data: usage }, { data: myArtworks }] = await Promise.all([
+    client.from("classes").select("daily_heart_limit").eq("id", user.classId).maybeSingle(),
+    client
+      .from("daily_heart_usage")
+      .select("used_count")
+      .eq("student_id", user.studentId)
+      .eq("usage_date", todayInTimeZone())
+      .maybeSingle(),
+    client.from("artworks").select("like_count").eq("student_id", user.studentId),
+  ]);
+
   const limit = classRow?.daily_heart_limit ?? 3;
-
-  const { data: usage } = await client
-    .from("daily_heart_usage")
-    .select("used_count")
-    .eq("student_id", user.studentId)
-    .eq("usage_date", todayInTimeZone())
-    .maybeSingle();
   const used = usage?.used_count ?? 0;
-
-  const { data: myArtworks } = await client
-    .from("artworks")
-    .select("like_count")
-    .eq("student_id", user.studentId);
   const totalReceived = (myArtworks ?? []).reduce((sum, a) => sum + a.like_count, 0);
 
   return { limit, remaining: Math.max(limit - used, 0), totalReceived };

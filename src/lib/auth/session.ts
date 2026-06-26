@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseBearerClient } from "@/lib/supabase/bearer";
 import {
@@ -10,8 +11,12 @@ export type CurrentUser =
   | { role: "teacher"; accountRole: AccountRole; id: string; email: string; name: string }
   | { role: "student"; studentId: string; classId: string; name: string };
 
-/** 현재 요청의 로그인 주체를 판별한다. 교사(Supabase Auth)를 우선 확인하고, 없으면 학생 쿠키를 본다. */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+/**
+ * 현재 요청의 로그인 주체를 판별한다. 교사(Supabase Auth)를 우선 확인하고, 없으면 학생 쿠키를 본다.
+ * React cache()로 감싸 레이아웃과 페이지가 각자 호출해도 같은 요청 안에서는 한 번만 실행된다
+ * (교사 계정은 매번 Supabase Auth로 실제 네트워크 호출이 나가므로 중복 호출 비용이 크다).
+ */
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (data.user) {
@@ -42,7 +47,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   }
 
   return null;
-}
+});
 
 /**
  * 현재 사용자의 권한으로 RLS가 적용되는 Supabase 클라이언트를 반환한다.

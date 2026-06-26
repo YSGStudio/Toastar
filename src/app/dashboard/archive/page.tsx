@@ -14,10 +14,12 @@ export default async function ArchivePage({
   if (!user) redirect("/login");
 
   const { periodId } = await searchParams;
-  const closedPeriods = await fetchPeriods({ status: "closed" });
   const selectedId = periodId ?? null;
 
-  const artworks = selectedId ? await fetchArtworkList(user, { scope: "archive", periodId: selectedId }) : [];
+  const [closedPeriods, artworks] = await Promise.all([
+    fetchPeriods({ status: "closed" }),
+    selectedId ? fetchArtworkList(user, { scope: "archive", periodId: selectedId }) : Promise.resolve([]),
+  ]);
 
   return (
     <div className="space-y-6">

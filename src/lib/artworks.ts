@@ -30,29 +30,25 @@ export async function fetchArtworkList(
   const rows = artworks ?? [];
   const artworkIds = rows.map((a) => a.id);
 
-  let likedSet = new Set<string>();
-  if (user.role === "student" && artworkIds.length > 0) {
-    const { data: likes } = await client
-      .from("artwork_likes")
-      .select("artwork_id")
-      .eq("student_id", user.studentId)
-      .in("artwork_id", artworkIds);
-    likedSet = new Set((likes ?? []).map((l) => l.artwork_id));
-  }
+  const [likesResult, awardsResult, signedUrlMap] = await Promise.all([
+    user.role === "student" && artworkIds.length > 0
+      ? client
+          .from("artwork_likes")
+          .select("artwork_id")
+          .eq("student_id", user.studentId)
+          .in("artwork_id", artworkIds)
+      : Promise.resolve({ data: null }),
+    artworkIds.length > 0
+      ? client.from("award_records").select("artwork_id").in("artwork_id", artworkIds)
+      : Promise.resolve({ data: null }),
+    signArtworkPaths(
+      client,
+      rows.flatMap((a) => [a.file_path, a.thumbnail_path]),
+    ),
+  ]);
 
-  let winnerSet = new Set<string>();
-  if (artworkIds.length > 0) {
-    const { data: awards } = await client
-      .from("award_records")
-      .select("artwork_id")
-      .in("artwork_id", artworkIds);
-    winnerSet = new Set((awards ?? []).map((a) => a.artwork_id));
-  }
-
-  const signedUrlMap = await signArtworkPaths(
-    client,
-    rows.flatMap((a) => [a.file_path, a.thumbnail_path]),
-  );
+  const likedSet = new Set((likesResult.data ?? []).map((l) => l.artwork_id));
+  const winnerSet = new Set((awardsResult.data ?? []).map((a) => a.artwork_id));
 
   return rows.map((a) => ({
     ...a,

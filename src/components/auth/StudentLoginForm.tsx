@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const LAST_CLASS_CODE_KEY = "toastar_last_class_code";
 
 export function StudentLoginForm() {
   const router = useRouter();
@@ -11,6 +13,13 @@ export function StudentLoginForm() {
   const [needsLoginNo, setNeedsLoginNo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // localStorage는 서버 렌더링 시점에 접근할 수 없어 마운트 후 한 번만 읽어와야 한다.
+    const saved = localStorage.getItem(LAST_CLASS_CODE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (saved) setClassCode(saved);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +37,7 @@ export function StudentLoginForm() {
         if (data.needsLoginNo) setNeedsLoginNo(true);
         return;
       }
+      localStorage.setItem(LAST_CLASS_CODE_KEY, classCode);
       router.push("/");
       router.refresh();
     } finally {

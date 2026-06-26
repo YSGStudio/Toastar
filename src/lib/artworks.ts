@@ -4,7 +4,7 @@ import type { ArtworkListItem } from "@/types/client";
 
 export async function fetchArtworkList(
   user: CurrentUser,
-  opts: { scope: "latest" | "archive"; periodId?: string | null },
+  opts: { scope: "latest" | "archive" | "mine"; periodId?: string | null },
 ): Promise<ArtworkListItem[]> {
   const client = await getScopedSupabaseClient(user);
 
@@ -18,6 +18,9 @@ export async function fetchArtworkList(
     const ids = (activePeriods ?? []).map((p) => p.id);
     if (ids.length === 0) return [];
     query = query.in("period_id", ids);
+  } else if (opts.scope === "mine") {
+    if (user.role !== "student") return [];
+    query = query.eq("student_id", user.studentId);
   } else {
     if (!opts.periodId) return [];
     query = query.eq("period_id", opts.periodId);

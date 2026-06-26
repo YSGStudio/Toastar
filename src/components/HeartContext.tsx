@@ -5,6 +5,7 @@ import { createContext, useContext, useState } from "react";
 interface HeartState {
   limit: number;
   remaining: number;
+  totalReceived: number;
 }
 
 interface HeartContextValue {

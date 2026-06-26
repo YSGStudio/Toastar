@@ -7,12 +7,14 @@ function todayInTimeZone(): string {
 }
 
 /**
- * 학생의 오늘 남은 하트 수를 계산한다. daily_heart_usage는 날짜별로 분리된 행이라
- * 전날 사용량과 무관하게 매일 0부터 다시 시작한다(이월 없음).
+ * 학생의 하트 현황을 계산한다.
+ * - remaining/limit: 오늘 남은 하트(줄 수 있는 하트). daily_heart_usage는 날짜별로 분리된 행이라
+ *   전날 사용량과 무관하게 매일 0부터 다시 시작한다(이월 없음).
+ * - totalReceived: 내가 올린 모든 작품이 지금까지 받은 하트 누적 합계.
  */
 export async function getHeartStatus(
   user: CurrentUser,
-): Promise<{ limit: number; remaining: number } | null> {
+): Promise<{ limit: number; remaining: number; totalReceived: number } | null> {
   if (user.role !== "student") return null;
 
   const client = await getScopedSupabaseClient(user);
@@ -32,5 +34,11 @@ export async function getHeartStatus(
     .maybeSingle();
   const used = usage?.used_count ?? 0;
 
-  return { limit, remaining: Math.max(limit - used, 0) };
+  const { data: myArtworks } = await client
+    .from("artworks")
+    .select("like_count")
+    .eq("student_id", user.studentId);
+  const totalReceived = (myArtworks ?? []).reduce((sum, a) => sum + a.like_count, 0);
+
+  return { limit, remaining: Math.max(limit - used, 0), totalReceived };
 }

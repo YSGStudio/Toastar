@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, GridIcon, PlusSquareIcon, GearIcon } from "@/components/icons";
+import { HomeIcon, GridIcon, PlusSquareIcon, GearIcon, PersonIcon } from "@/components/icons";
 import type { CurrentUser } from "@/lib/auth/session";
 
 export function BottomTabBar({ user }: { user: CurrentUser }) {
@@ -12,7 +12,10 @@ export function BottomTabBar({ user }: { user: CurrentUser }) {
     { href: "/dashboard/latest", label: "최신 자료", Icon: HomeIcon },
     { href: "/dashboard/archive", label: "지난 자료", Icon: GridIcon },
     ...(user.role === "student"
-      ? [{ href: "/dashboard/latest", label: "작품 올리기", Icon: PlusSquareIcon }]
+      ? [
+          { href: "/dashboard/my-artworks", label: "내 작품", Icon: PersonIcon },
+          { href: "/dashboard/latest", label: "작품 올리기", Icon: PlusSquareIcon },
+        ]
       : []),
     ...(user.role === "teacher"
       ? [{ href: "/dashboard/settings", label: "환경설정", Icon: GearIcon }]

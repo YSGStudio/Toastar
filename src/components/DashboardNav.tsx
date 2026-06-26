@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { HeartBadge } from "@/components/HeartBadge";
+import { TotalHeartsBadge } from "@/components/TotalHeartsBadge";
 import type { CurrentUser } from "@/lib/auth/session";
 
 export function DashboardNav({ user }: { user: CurrentUser }) {
@@ -23,9 +24,15 @@ export function DashboardNav({ user }: { user: CurrentUser }) {
                 환경설정
               </Link>
             )}
+            {user.role === "student" && (
+              <Link href="/dashboard/my-artworks" className="rounded-md px-3 py-1.5 font-medium hover:bg-zinc-100">
+                내 작품
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <TotalHeartsBadge />
           <HeartBadge />
           <span className="hidden text-sm text-zinc-500 sm:inline">
             {user.name}

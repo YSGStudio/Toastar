@@ -10,11 +10,14 @@ export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
 
-  const scope = (req.nextUrl.searchParams.get("scope") ?? "latest") as "latest" | "archive";
+  const scope = (req.nextUrl.searchParams.get("scope") ?? "latest") as "latest" | "archive" | "mine";
   const periodId = req.nextUrl.searchParams.get("periodId");
 
   if (scope === "archive" && !periodId) {
     return NextResponse.json({ error: "periodId가 필요합니다." }, { status: 400 });
+  }
+  if (scope === "mine" && user.role !== "student") {
+    return NextResponse.json({ error: "학생만 접근할 수 있습니다." }, { status: 403 });
   }
 
   const artworks = await fetchArtworkList(user, { scope, periodId });

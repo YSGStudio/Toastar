@@ -35,7 +35,6 @@ export function TeacherAuthForm() {
         return;
       }
       router.push("/");
-      router.refresh();
     } finally {
       setLoading(false);
     }

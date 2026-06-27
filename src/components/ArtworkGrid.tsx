@@ -23,6 +23,7 @@ export function ArtworkGrid({
   const [artworks, setArtworks] = useState(initialArtworks);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [prevInitialArtworks, setPrevInitialArtworks] = useState(initialArtworks);
   const { decrementHeart, incrementHeart } = useHeart();
 
@@ -82,6 +83,23 @@ export function ArtworkGrid({
     }
   }
 
+  async function handleDelete(artwork: ArtworkListItem) {
+    if (!confirm(`"${artwork.title}" 작품을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    setDeletingId(artwork.id);
+    try {
+      const res = await fetch(`/api/artworks/${artwork.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
+        setSelectedId(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error ?? "삭제에 실패했습니다.");
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   const selected = artworks.find((a) => a.id === selectedId) ?? null;
 
   return (
@@ -113,6 +131,8 @@ export function ArtworkGrid({
           canLike={canLikeArtwork(selected)}
           onClose={() => setSelectedId(null)}
           onToggleLike={() => toggleLike(selected)}
+          onDelete={() => handleDelete(selected)}
+          deleting={deletingId === selected.id}
         />
       )}
     </PullToRefresh>

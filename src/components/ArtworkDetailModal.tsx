@@ -15,11 +15,15 @@ export function ArtworkDetailModal({
   canLike,
   onClose,
   onToggleLike,
+  onDelete,
+  deleting,
 }: {
   artwork: ArtworkListItem;
   canLike: boolean;
   onClose: () => void;
   onToggleLike: () => void;
+  onDelete?: () => void;
+  deleting?: boolean;
 }) {
   const authorName = artwork.students?.name ?? "익명";
 
@@ -40,9 +44,21 @@ export function ArtworkDetailModal({
             <span className="text-sm font-semibold text-zinc-900">{authorName}</span>
             {artwork.is_winner && <span className="text-xs">👑 수상작</span>}
           </div>
-          <button type="button" onClick={onClose} className="px-2 text-xl text-zinc-400">
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            {artwork.can_manage && onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={deleting}
+                className="text-xs font-medium text-[#ED4956] disabled:opacity-40"
+              >
+                {deleting ? "삭제 중..." : "삭제"}
+              </button>
+            )}
+            <button type="button" onClick={onClose} className="px-2 text-xl text-zinc-400">
+              ×
+            </button>
+          </div>
         </div>
 
         <div

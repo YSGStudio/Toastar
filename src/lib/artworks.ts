@@ -30,7 +30,7 @@ export async function fetchArtworkList(
   const rows = artworks ?? [];
   const artworkIds = rows.map((a) => a.id);
 
-  const [likesResult, awardsResult, signedUrlMap] = await Promise.all([
+  const [likesResult, awardsResult, signedUrlMap, ownedClassesResult] = await Promise.all([
     user.role === "student" && artworkIds.length > 0
       ? client
           .from("artwork_likes")
@@ -45,10 +45,14 @@ export async function fetchArtworkList(
       client,
       rows.flatMap((a) => [a.file_path, a.thumbnail_path]),
     ),
+    user.role === "teacher"
+      ? client.from("classes").select("id").eq("teacher_id", user.id)
+      : Promise.resolve({ data: null }),
   ]);
 
   const likedSet = new Set((likesResult.data ?? []).map((l) => l.artwork_id));
   const winnerSet = new Set((awardsResult.data ?? []).map((a) => a.artwork_id));
+  const ownedClassIds = new Set((ownedClassesResult.data ?? []).map((c) => c.id));
 
   return rows.map((a) => ({
     ...a,
@@ -56,5 +60,6 @@ export async function fetchArtworkList(
     thumbnail_url: a.thumbnail_path ? signedUrlMap.get(a.thumbnail_path) ?? a.thumbnail_path : null,
     liked_by_me: likedSet.has(a.id),
     is_winner: winnerSet.has(a.id),
+    can_manage: ownedClassIds.has(a.class_id),
   })) as ArtworkListItem[];
 }

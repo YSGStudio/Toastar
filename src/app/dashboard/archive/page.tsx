@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import { fetchPeriods } from "@/lib/periods";
 import { fetchArtworkList } from "@/lib/artworks";
 import { ArtworkGrid } from "@/components/ArtworkGrid";
 import { PeriodPicker } from "@/components/PeriodPicker";
@@ -16,14 +15,11 @@ export default async function ArchivePage({
   const { periodId } = await searchParams;
   const selectedId = periodId ?? null;
 
-  const [closedPeriods, artworks] = await Promise.all([
-    fetchPeriods({ status: "closed" }),
-    selectedId ? fetchArtworkList(user, { scope: "archive", periodId: selectedId }) : Promise.resolve([]),
-  ]);
+  const artworks = selectedId ? await fetchArtworkList(user, { scope: "archive", periodId: selectedId }) : [];
 
   return (
     <div className="space-y-6">
-      <PeriodPicker periods={closedPeriods} selectedId={selectedId} />
+      <PeriodPicker selectedId={selectedId} />
       {!selectedId ? (
         <p className="py-20 text-center text-sm text-zinc-400">지난 기간을 선택하면 작품을 볼 수 있어요.</p>
       ) : (

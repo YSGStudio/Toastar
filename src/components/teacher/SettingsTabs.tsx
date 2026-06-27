@@ -5,11 +5,12 @@ import { PeriodManager } from "@/components/teacher/PeriodManager";
 import { HeartLimitForm } from "@/components/teacher/HeartLimitForm";
 import { LoginBlockRulesForm } from "@/components/teacher/LoginBlockRulesForm";
 import { StudentManager } from "@/components/teacher/StudentManager";
+import { TitlePresetsManager } from "@/components/teacher/TitlePresetsManager";
 import { AwardRecordsPanel } from "@/components/teacher/AwardRecordsPanel";
-import type { AccountRole, ClassRow, LoginBlockRule, Period, Student } from "@/types/database";
+import type { AccountRole, ClassRow, LoginBlockRule, Period, Student, TitlePreset } from "@/types/database";
 
 const ADMIN_TABS = ["기간 관리", "하트 정책", "로그인 차단", "시상 기록"] as const;
-const TEACHER_TABS = ["학생 관리", "시상 기록"] as const;
+const TEACHER_TABS = ["학생 관리", "제목 관리", "시상 기록"] as const;
 
 interface AwardRow {
   id: string;
@@ -27,6 +28,7 @@ export function SettingsTabs({
   loginBlockRules,
   awards,
   students,
+  titlePresets,
 }: {
   accountRole: AccountRole;
   classRow: ClassRow;
@@ -34,6 +36,7 @@ export function SettingsTabs({
   loginBlockRules: LoginBlockRule[];
   awards: AwardRow[];
   students: Student[];
+  titlePresets: TitlePreset[];
 }) {
   const tabs = accountRole === "admin" ? ADMIN_TABS : TEACHER_TABS;
   const [tab, setTab] = useState<string>(tabs[0]);
@@ -71,6 +74,9 @@ export function SettingsTabs({
       )}
       {accountRole === "teacher" && tab === "학생 관리" && (
         <StudentManager classId={classRow.id} initialStudents={students} />
+      )}
+      {accountRole === "teacher" && tab === "제목 관리" && (
+        <TitlePresetsManager classId={classRow.id} initialTitlePresets={titlePresets} />
       )}
       {tab === "시상 기록" && (
         <AwardRecordsPanel

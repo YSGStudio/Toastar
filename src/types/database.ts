@@ -47,8 +47,16 @@ export interface Artwork {
   file_path: string;
   thumbnail_path: string | null;
   title: string;
-  description: string | null;
+  ai_help_description: string | null;
+  self_description: string | null;
   like_count: number;
+  created_at: string;
+}
+
+export interface TitlePreset {
+  id: string;
+  class_id: string;
+  title: string;
   created_at: string;
 }
 

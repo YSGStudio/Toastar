@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ArtworkType } from "@/types/database";
+import type { ArtworkType, TitlePreset } from "@/types/database";
 
 const TYPE_LABELS: Record<ArtworkType, string> = {
   image: "이미지",
@@ -65,21 +65,37 @@ function generateVideoThumbnail(file: File): Promise<Blob | null> {
 export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
   const router = useRouter();
   const [type, setType] = useState<ArtworkType>("image");
+  const [titlePresets, setTitlePresets] = useState<TitlePreset[] | null>(null);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [aiHelpDescription, setAiHelpDescription] = useState("");
+  const [selfDescription, setSelfDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/title-presets")
+      .then((res) => (res.ok ? res.json() : { titlePresets: [] }))
+      .then((data) => setTitlePresets(data.titlePresets ?? []))
+      .catch(() => setTitlePresets([]));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
+      if (!title) {
+        setError("제목을 선택해 주세요.");
+        setLoading(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.set("title", title);
-      formData.set("description", description);
+      formData.set("aiHelpDescription", aiHelpDescription);
+      formData.set("selfDescription", selfDescription);
       formData.set("type", type);
 
       if (type === "link") {
@@ -106,7 +122,8 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
         return;
       }
       setTitle("");
-      setDescription("");
+      setAiHelpDescription("");
+      setSelfDescription("");
       setFile(null);
       setLinkUrl("");
       onUploaded();
@@ -138,22 +155,46 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
         ))}
       </div>
 
-      <input
-        type="text"
-        placeholder="제목"
+      <select
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
-        maxLength={60}
         className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-      />
-      <textarea
-        placeholder="설명 (선택)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={2}
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-      />
+      >
+        <option value="" disabled>
+          {titlePresets === null
+            ? "제목 불러오는 중..."
+            : titlePresets.length === 0
+              ? "선생님이 아직 제목을 등록하지 않았어요"
+              : "제목을 선택하세요"}
+        </option>
+        {(titlePresets ?? []).map((p) => (
+          <option key={p.id} value={p.title}>
+            {p.title}
+          </option>
+        ))}
+      </select>
+
+      <label className="block text-xs font-medium text-zinc-500">
+        AI의 도움을 받은 점
+        <textarea
+          placeholder="생성형 AI로부터 어떤 도움을 받았는지 정직하게 적어주세요 (선택)"
+          value={aiHelpDescription}
+          onChange={(e) => setAiHelpDescription(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label className="block text-xs font-medium text-zinc-500">
+        내가 스스로 한 점
+        <textarea
+          placeholder="내가 직접 생각하고 만든 부분을 적어주세요 (선택)"
+          value={selfDescription}
+          onChange={(e) => setSelfDescription(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        />
+      </label>
 
       {type === "link" ? (
         <input

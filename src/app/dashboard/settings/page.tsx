@@ -34,16 +34,18 @@ export default async function SettingsPage({
   const { classId } = await searchParams;
   const classRow = (classes.find((c) => c.id === classId) ?? classes[0]) as ClassRow;
 
-  const [periods, { data: loginBlockRules }, { data: awards }, { data: students }] = await Promise.all([
-    fetchPeriods({ classId: classRow.id }),
-    supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
-    supabase
-      .from("award_records")
-      .select("*, artworks(title), students(name), periods(start_date, end_date)")
-      .eq("class_id", classRow.id)
-      .order("awarded_at", { ascending: false }),
-    supabase.from("students").select("*").eq("class_id", classRow.id).order("name", { ascending: true }),
-  ]);
+  const [periods, { data: loginBlockRules }, { data: awards }, { data: students }, { data: titlePresets }] =
+    await Promise.all([
+      fetchPeriods({ classId: classRow.id }),
+      supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
+      supabase
+        .from("award_records")
+        .select("*, artworks(title), students(name), periods(start_date, end_date)")
+        .eq("class_id", classRow.id)
+        .order("awarded_at", { ascending: false }),
+      supabase.from("students").select("*").eq("class_id", classRow.id).order("name", { ascending: true }),
+      supabase.from("title_presets").select("*").eq("class_id", classRow.id).order("title", { ascending: true }),
+    ]);
 
   return (
     <div className="space-y-4">
@@ -55,6 +57,7 @@ export default async function SettingsPage({
         loginBlockRules={(loginBlockRules ?? []) as LoginBlockRule[]}
         awards={awards ?? []}
         students={students ?? []}
+        titlePresets={titlePresets ?? []}
       />
     </div>
   );

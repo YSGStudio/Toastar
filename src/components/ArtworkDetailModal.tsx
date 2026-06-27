@@ -125,8 +125,17 @@ export function ArtworkDetailModal({
             <span className="font-semibold">{authorName}</span>{" "}
             <span className="font-medium">{artwork.title}</span>
           </p>
-          {artwork.description && (
-            <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.description}</p>
+          {artwork.ai_help_description && (
+            <div className="mt-2 rounded-md bg-sky-50 px-2.5 py-2">
+              <p className="text-[11px] font-semibold text-sky-600">AI의 도움을 받은 점</p>
+              <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.ai_help_description}</p>
+            </div>
+          )}
+          {artwork.self_description && (
+            <div className="mt-2 rounded-md bg-emerald-50 px-2.5 py-2">
+              <p className="text-[11px] font-semibold text-emerald-600">내가 스스로 한 점</p>
+              <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.self_description}</p>
+            </div>
           )}
         </div>
       </div>

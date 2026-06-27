@@ -34,14 +34,15 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData();
   const title = String(form.get("title") ?? "").trim();
-  const description = String(form.get("description") ?? "").trim() || null;
+  const aiHelpDescription = String(form.get("aiHelpDescription") ?? "").trim() || null;
+  const selfDescription = String(form.get("selfDescription") ?? "").trim() || null;
   const type = String(form.get("type") ?? "") as ArtworkType;
   const linkUrl = String(form.get("linkUrl") ?? "").trim();
   const file = form.get("file");
   const thumbnailFile = form.get("thumbnail");
 
   if (!title) {
-    return NextResponse.json({ error: "제목을 입력해 주세요." }, { status: 400 });
+    return NextResponse.json({ error: "제목을 선택해 주세요." }, { status: 400 });
   }
   if (!ALLOWED_TYPES.includes(type)) {
     return NextResponse.json({ error: "지원하지 않는 작품 형식입니다." }, { status: 400 });
@@ -54,6 +55,20 @@ export async function POST(req: NextRequest) {
   }
 
   const client = await getScopedSupabaseClient(user);
+
+  const { data: titlePreset } = await client
+    .from("title_presets")
+    .select("id")
+    .eq("class_id", user.classId)
+    .eq("title", title)
+    .maybeSingle();
+
+  if (!titlePreset) {
+    return NextResponse.json(
+      { error: "선생님이 등록한 제목 중에서 선택해 주세요." },
+      { status: 400 },
+    );
+  }
 
   const { data: activePeriod } = await client
     .from("periods")
@@ -126,7 +141,8 @@ export async function POST(req: NextRequest) {
       file_path: filePath,
       thumbnail_path: thumbnailPath,
       title,
-      description,
+      ai_help_description: aiHelpDescription,
+      self_description: selfDescription,
     })
     .select()
     .single();

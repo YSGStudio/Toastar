@@ -3,7 +3,7 @@
 import { HeartIcon, ShareIcon } from "@/components/icons";
 import type { ArtworkListItem } from "@/types/client";
 
-const AVATAR_COLORS = ["#F58529", "#DD2A7B", "#8134AF", "#515BD4", "#0095F6", "#00A86B"];
+const AVATAR_COLORS = ["#F58529", "#DD2A7B", "#8134AF", "#515BD4", "#6C5CE7", "#00A86B"];
 
 function avatarColor(name: string) {
   const code = name.charCodeAt(0) || 0;
@@ -100,7 +100,7 @@ export function ArtworkDetailModal({
                 href={artwork.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 break-all text-sm font-medium text-[#0095F6]"
+                className="flex items-center gap-1 break-all text-sm font-medium text-[#6C5CE7]"
               >
                 <ShareIcon className="h-4 w-4 shrink-0" />
                 {artwork.file_url}

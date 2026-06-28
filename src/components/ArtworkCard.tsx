@@ -1,12 +1,13 @@
 "use client";
 
 import { HeartIcon } from "@/components/icons";
+import { pastelToneFor } from "@/lib/pastelPalette";
 import type { ArtworkListItem } from "@/types/client";
 
-function ThumbnailFallback({ type }: { type: ArtworkListItem["type"] }) {
+function ThumbnailFallback({ type, fallbackClass }: { type: ArtworkListItem["type"]; fallbackClass: string }) {
   const icon = { audio: "🎵", link: "🔗", video: "🎬", image: "🖼️" }[type];
   return (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-300 text-3xl">
+    <div className={`flex h-full w-full items-center justify-center text-3xl ${fallbackClass}`}>
       {icon}
     </div>
   );
@@ -23,6 +24,8 @@ export function ArtworkCard({
   onOpen: () => void;
   onToggleLike: () => void;
 }) {
+  const tone = pastelToneFor(artwork.id);
+
   return (
     <div
       role="button"
@@ -31,12 +34,12 @@ export function ArtworkCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onOpen();
       }}
-      className={`cursor-pointer overflow-hidden rounded-md bg-zinc-200 ${
+      className={`cursor-pointer overflow-hidden rounded-md ${tone.card} ${
         artwork.is_winner ? "ring-2 ring-amber-400" : ""
       }`}
     >
       <div
-        className="relative aspect-square w-full overflow-hidden bg-zinc-300"
+        className={`relative aspect-square w-full overflow-hidden ${tone.fallback}`}
         onContextMenu={(e) => e.preventDefault()}
       >
         {artwork.is_winner && (
@@ -53,7 +56,7 @@ export function ArtworkCard({
             className="h-full w-full select-none object-cover"
           />
         ) : (
-          <ThumbnailFallback type={artwork.type} />
+          <ThumbnailFallback type={artwork.type} fallbackClass={tone.fallback} />
         )}
       </div>
       <div className="px-1.5 py-1.5">

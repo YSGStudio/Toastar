@@ -87,7 +87,7 @@ export function StudentBulkUpload({ classId }: { classId: string }) {
         type="button"
         onClick={handleUpload}
         disabled={names.length === 0 || loading}
-        className="w-full rounded-md bg-[#0095F6] py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="w-full rounded-md bg-[#6C5CE7] py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {loading ? "등록 중..." : "등록하기"}
       </button>

@@ -120,7 +120,7 @@ export function TeacherAuthForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 w-full rounded-md bg-[#0095F6] py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="mt-2 w-full rounded-md bg-[#6C5CE7] py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {loading ? "처리 중..." : mode === "login" ? "로그인" : "가입하기"}
         </button>

@@ -82,7 +82,7 @@ export function StudentLoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-2 w-full rounded-md bg-[#0095F6] py-2 text-sm font-semibold text-white disabled:opacity-40"
+        className="mt-2 w-full rounded-md bg-[#6C5CE7] py-2 text-sm font-semibold text-white disabled:opacity-40"
       >
         {loading ? "확인 중..." : "로그인"}
       </button>

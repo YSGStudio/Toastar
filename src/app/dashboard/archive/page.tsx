@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { fetchArtworkList } from "@/lib/artworks";
 import { ArtworkGrid } from "@/components/ArtworkGrid";
 import { PeriodPicker } from "@/components/PeriodPicker";
+import { StarDoodle } from "@/components/illustrations/Doodles";
 
 export default async function ArchivePage({
   searchParams,
@@ -21,7 +22,10 @@ export default async function ArchivePage({
     <div className="space-y-6">
       <PeriodPicker selectedId={selectedId} />
       {!selectedId ? (
-        <p className="py-20 text-center text-sm text-zinc-400">지난 기간을 선택하면 작품을 볼 수 있어요.</p>
+        <div className="flex flex-col items-center gap-3 py-16">
+          <StarDoodle className="h-20 w-20 text-amber-200" />
+          <p className="text-center text-sm text-zinc-400">지난 기간을 선택하면 작품을 볼 수 있어요.</p>
+        </div>
       ) : (
         <ArtworkGrid
           initialArtworks={artworks}

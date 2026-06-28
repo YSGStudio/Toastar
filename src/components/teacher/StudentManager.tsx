@@ -63,7 +63,7 @@ export function StudentManager({ classId, initialStudents }: { classId: string; 
           <button
             type="submit"
             disabled={loading}
-            className="shrink-0 rounded-md bg-[#0095F6] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="shrink-0 rounded-md bg-[#6C5CE7] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             추가
           </button>

@@ -51,7 +51,7 @@ export function SettingsTabs({
             type="button"
             onClick={() => setTab(t)}
             className={`shrink-0 rounded-full px-4 py-2 font-medium ${
-              tab === t ? "bg-white shadow text-[#0095F6]" : "text-zinc-500"
+              tab === t ? "bg-white shadow text-[#6C5CE7]" : "text-zinc-500"
             }`}
           >
             {t}

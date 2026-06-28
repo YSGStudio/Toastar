@@ -99,7 +99,7 @@ export function EthicsGuideGate() {
           <button
             type="button"
             onClick={handleAgree}
-            className="w-full rounded-md bg-[#0095F6] py-2.5 text-sm font-semibold text-white"
+            className="w-full rounded-md bg-[#6C5CE7] py-2.5 text-sm font-semibold text-white"
           >
             나는 윤리 핵심가이드를 빠짐없이 읽고 이를 실천하겠습니다.
           </button>

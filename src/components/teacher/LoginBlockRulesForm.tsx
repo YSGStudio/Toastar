@@ -103,7 +103,7 @@ export function LoginBlockRulesForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-[#0095F6] py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="w-full rounded-md bg-[#6C5CE7] py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {loading ? "저장 중..." : "저장"}
       </button>

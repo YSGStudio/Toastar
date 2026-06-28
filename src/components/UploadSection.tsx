@@ -21,7 +21,7 @@ export function UploadSection({ alreadyPosted }: { alreadyPosted: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-2xl border-2 border-dashed border-[#0095F6]/30 bg-[#0095F6]/5 py-4 text-sm font-semibold text-[#0095F6]"
+        className="w-full rounded-2xl border-2 border-dashed border-[#6C5CE7]/30 bg-[#6C5CE7]/5 py-4 text-sm font-semibold text-[#6C5CE7]"
       >
         + 작품 올리기
       </button>

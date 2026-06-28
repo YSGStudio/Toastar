@@ -110,21 +110,7 @@ export function ArtworkDetailModal({
         </div>
 
         <div className="px-3 py-2">
-          <div className="flex items-center gap-4 py-1">
-            <button
-              type="button"
-              disabled={!canLike}
-              onClick={onToggleLike}
-              className={artwork.liked_by_me ? "text-[#ED4956]" : "text-zinc-900"}
-            >
-              <HeartIcon filled={artwork.liked_by_me} className="h-7 w-7" />
-            </button>
-          </div>
-          <p className="text-sm font-semibold text-zinc-900">좋아요 {artwork.like_count}개</p>
-          <p className="mt-1 text-sm text-zinc-900">
-            <span className="font-semibold">{authorName}</span>{" "}
-            <span className="font-medium">{artwork.title}</span>
-          </p>
+          <p className="text-sm font-medium text-zinc-900">{artwork.title}</p>
           {artwork.ai_help_description && (
             <div className="mt-2 rounded-md bg-sky-50 px-2.5 py-2">
               <p className="text-[11px] font-semibold text-sky-600">AI의 도움을 받은 점</p>
@@ -137,6 +123,17 @@ export function ArtworkDetailModal({
               <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.self_description}</p>
             </div>
           )}
+          <div className="mt-3 flex items-center gap-2 border-t border-zinc-100 pt-2">
+            <button
+              type="button"
+              disabled={!canLike}
+              onClick={onToggleLike}
+              className={artwork.liked_by_me ? "text-[#ED4956]" : "text-zinc-900"}
+            >
+              <HeartIcon filled={artwork.liked_by_me} className="h-7 w-7" />
+            </button>
+            <p className="text-sm font-semibold text-zinc-900">좋아요 {artwork.like_count}개</p>
+          </div>
         </div>
       </div>
     </div>

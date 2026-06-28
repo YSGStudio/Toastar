@@ -4,6 +4,7 @@ import { getCurrentUser, getScopedSupabaseClient } from "@/lib/auth/session";
 import { fetchArtworkList } from "@/lib/artworks";
 import { ARTWORK_BUCKET, artworkFilePath, artworkThumbnailPath } from "@/lib/storagePaths";
 import { fetchLinkPreviewImage } from "@/lib/ogImage";
+import { checkForAbusiveContent } from "@/lib/contentModeration";
 import type { ArtworkType } from "@/types/database";
 
 export async function GET(req: NextRequest) {
@@ -68,6 +69,22 @@ export async function POST(req: NextRequest) {
       { error: "선생님이 등록한 제목 중에서 선택해 주세요." },
       { status: 400 },
     );
+  }
+
+  const combinedText = [aiHelpDescription, selfDescription].filter(Boolean).join("\n");
+  if (combinedText) {
+    const moderation = await checkForAbusiveContent(combinedText);
+    if (moderation.flagged) {
+      return NextResponse.json(
+        {
+          error: moderation.reason
+            ? `욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요. (${moderation.reason})`
+            : "욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요.",
+          code: "CONTENT_FLAGGED",
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const { data: activePeriod } = await client

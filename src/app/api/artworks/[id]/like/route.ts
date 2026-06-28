@@ -38,21 +38,3 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   return NextResponse.json({ ok: true });
 }
-
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "student") {
-    return NextResponse.json({ error: "학생만 좋아요를 취소할 수 있습니다." }, { status: 403 });
-  }
-  const { id } = await params;
-  const client = await getScopedSupabaseClient(user);
-
-  const { error } = await client
-    .from("artwork_likes")
-    .delete()
-    .eq("artwork_id", id)
-    .eq("student_id", user.studentId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ ok: true });
-}

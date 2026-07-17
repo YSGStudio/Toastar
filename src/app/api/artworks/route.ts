@@ -57,12 +57,25 @@ export async function POST(req: NextRequest) {
 
   const client = await getScopedSupabaseClient(user);
 
-  const { data: titlePreset } = await client
-    .from("title_presets")
-    .select("id")
-    .eq("class_id", user.classId)
-    .eq("title", title)
-    .maybeSingle();
+  // 제목 검증·비속어 검사·기간 조회는 서로 독립이므로 병렬로 실행한다 (OpenAI 검사가 가장 느리다).
+  const combinedText = [aiHelpDescription, selfDescription].filter(Boolean).join("\n");
+  const [{ data: titlePreset }, moderation, { data: activePeriod }] = await Promise.all([
+    client
+      .from("title_presets")
+      .select("id")
+      .eq("class_id", user.classId)
+      .eq("title", title)
+      .maybeSingle(),
+    combinedText
+      ? checkForAbusiveContent(combinedText)
+      : Promise.resolve({ flagged: false, reason: null }),
+    client
+      .from("periods")
+      .select("id")
+      .eq("class_id", user.classId)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
 
   if (!titlePreset) {
     return NextResponse.json(
@@ -71,28 +84,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const combinedText = [aiHelpDescription, selfDescription].filter(Boolean).join("\n");
-  if (combinedText) {
-    const moderation = await checkForAbusiveContent(combinedText);
-    if (moderation.flagged) {
-      return NextResponse.json(
-        {
-          error: moderation.reason
-            ? `욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요. (${moderation.reason})`
-            : "욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요.",
-          code: "CONTENT_FLAGGED",
-        },
-        { status: 400 },
-      );
-    }
+  if (moderation.flagged) {
+    return NextResponse.json(
+      {
+        error: moderation.reason
+          ? `욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요. (${moderation.reason})`
+          : "욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요.",
+        code: "CONTENT_FLAGGED",
+      },
+      { status: 400 },
+    );
   }
-
-  const { data: activePeriod } = await client
-    .from("periods")
-    .select("id")
-    .eq("class_id", user.classId)
-    .eq("status", "active")
-    .maybeSingle();
 
   if (!activePeriod) {
     return NextResponse.json({ error: "현재 진행 중인 게시 기간이 없습니다." }, { status: 400 });

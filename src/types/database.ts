@@ -1,4 +1,4 @@
-export type ArtworkType = "image" | "link" | "video" | "audio";
+export type ArtworkType = "image" | "link" | "video" | "audio" | "pdf";
 export type PeriodStatus = "active" | "closed";
 export type DayType = "weekday" | "weekend";
 export type AccountRole = "admin" | "teacher";

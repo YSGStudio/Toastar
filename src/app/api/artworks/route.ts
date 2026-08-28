@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ artworks });
 }
 
-const ALLOWED_TYPES: ArtworkType[] = ["image", "link", "video", "audio"];
+const ALLOWED_TYPES: ArtworkType[] = ["image", "link", "video", "audio", "pdf"];
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -53,6 +53,14 @@ export async function POST(req: NextRequest) {
   }
   if (type !== "link" && !(file instanceof File)) {
     return NextResponse.json({ error: "파일을 첨부해 주세요." }, { status: 400 });
+  }
+  if (
+    type === "pdf" &&
+    file instanceof File &&
+    file.type !== "application/pdf" &&
+    !file.name.toLowerCase().endsWith(".pdf")
+  ) {
+    return NextResponse.json({ error: "PDF 파일만 올릴 수 있습니다." }, { status: 400 });
   }
 
   const client = await getScopedSupabaseClient(user);
@@ -133,7 +141,11 @@ export async function POST(req: NextRequest) {
     });
     const { error: uploadError } = await client.storage
       .from(ARTWORK_BUCKET)
-      .upload(filePath, file, { contentType: file.type || undefined, upsert: false });
+      .upload(filePath, file, {
+        // PDF는 브라우저에서 바로 열람할 수 있도록 Content-Type을 명시한다.
+        contentType: type === "pdf" ? "application/pdf" : file.type || undefined,
+        upsert: false,
+      });
     if (uploadError) {
       return NextResponse.json({ error: `파일 업로드 실패: ${uploadError.message}` }, { status: 400 });
     }

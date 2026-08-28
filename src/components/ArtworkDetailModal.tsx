@@ -88,6 +88,23 @@ export function ArtworkDetailModal({
               <audio src={artwork.file_url} controls controlsList="nodownload" className="w-full" />
             </div>
           )}
+          {artwork.type === "pdf" && (
+            <div className="flex h-full w-full flex-col">
+              <iframe
+                src={`${artwork.file_url}#toolbar=0&navpanes=0`}
+                title={artwork.title}
+                className="h-full w-full flex-1 bg-white"
+              />
+              <a
+                href={artwork.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1 border-t border-zinc-200 bg-white py-2 text-xs font-medium text-[#6C5CE7]"
+              >
+                📄 새 탭에서 크게 보기
+              </a>
+            </div>
+          )}
           {artwork.type === "link" && (
             <div className="flex w-full flex-col items-center gap-4 p-10">
               {artwork.thumbnail_url ? (

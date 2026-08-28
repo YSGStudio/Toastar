@@ -4,10 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ArtworkType, TitlePreset } from "@/types/database";
 
+const ACCEPT_BY_TYPE: Record<Exclude<ArtworkType, "link">, string> = {
+  image: "image/*",
+  video: "video/*",
+  audio: "audio/*",
+  pdf: "application/pdf,.pdf",
+};
+
 const TYPE_LABELS: Record<ArtworkType, string> = {
   image: "이미지",
   video: "동영상",
   audio: "오디오",
+  pdf: "PDF",
   link: "링크",
 };
 
@@ -101,6 +109,15 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       if (type === "link") {
         formData.set("linkUrl", linkUrl);
       } else if (file) {
+        if (
+          type === "pdf" &&
+          file.type !== "application/pdf" &&
+          !file.name.toLowerCase().endsWith(".pdf")
+        ) {
+          setError("PDF 파일만 올릴 수 있습니다.");
+          setLoading(false);
+          return;
+        }
         formData.set("file", file);
         const thumbnail =
           type === "image"
@@ -210,7 +227,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
         <input
           key="file-input"
           type="file"
-          accept={type === "image" ? "image/*" : type === "video" ? "video/*" : "audio/*"}
+          accept={ACCEPT_BY_TYPE[type]}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           required
           className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"

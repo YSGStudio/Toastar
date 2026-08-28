@@ -5,7 +5,7 @@ import { pastelToneFor } from "@/lib/pastelPalette";
 import type { ArtworkListItem } from "@/types/client";
 
 function ThumbnailFallback({ type, fallbackClass }: { type: ArtworkListItem["type"]; fallbackClass: string }) {
-  const icon = { audio: "🎵", link: "🔗", video: "🎬", image: "🖼️" }[type];
+  const icon = { audio: "🎵", link: "🔗", video: "🎬", image: "🖼️", pdf: "📄" }[type];
   return (
     <div className={`flex h-full w-full items-center justify-center text-3xl ${fallbackClass}`}>
       {icon}

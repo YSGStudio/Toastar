@@ -21,6 +21,8 @@ export default async function LatestPage() {
         canLike={user.role === "student"}
         currentStudentId={user.role === "student" ? user.studentId : null}
         emptyMessage="아직 게시된 작품이 없어요."
+        // 학생 화면에서는 새 작품과 하트 수를 15초마다 자동으로 받아온다.
+        pollIntervalMs={user.role === "student" ? 15_000 : undefined}
       />
     </div>
   );

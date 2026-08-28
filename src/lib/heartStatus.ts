@@ -19,20 +19,44 @@ export async function getHeartStatus(
 
   const client = await getScopedSupabaseClient(user);
 
-  const [{ data: classRow }, { data: usage }, { data: myArtworks }] = await Promise.all([
-    client.from("classes").select("daily_heart_limit").eq("id", user.classId).maybeSingle(),
+  const [budget, { data: myArtworks }] = await Promise.all([
+    fetchHeartBudget(client, user),
+    client.from("artworks").select("like_count").eq("student_id", user.studentId),
+  ]);
+
+  const totalReceived = (myArtworks ?? []).reduce((sum, a) => sum + a.like_count, 0);
+
+  return { ...budget, totalReceived };
+}
+
+/**
+ * 오늘 남은 하트만 조회한다(받은 하트 합계는 계산하지 않는다).
+ * 하트를 준 직후처럼 잔량만 서버 값으로 다시 맞추면 되는 곳에서 쓴다.
+ */
+export async function getRemainingHearts(
+  user: CurrentUser,
+): Promise<{ limit: number; remaining: number } | null> {
+  if (user.role !== "student") return null;
+  const client = await getScopedSupabaseClient(user);
+  return fetchHeartBudget(client, user);
+}
+
+async function fetchHeartBudget(
+  client: Awaited<ReturnType<typeof getScopedSupabaseClient>>,
+  student: Extract<CurrentUser, { role: "student" }>,
+): Promise<{ limit: number; remaining: number }> {
+  const [{ data: classRow }, { data: usage }] = await Promise.all([
+    client.from("classes").select("daily_heart_limit").eq("id", student.classId).maybeSingle(),
     client
       .from("daily_heart_usage")
       .select("used_count")
-      .eq("student_id", user.studentId)
+      .eq("student_id", student.studentId)
       .eq("usage_date", todayInTimeZone())
       .maybeSingle(),
-    client.from("artworks").select("like_count").eq("student_id", user.studentId),
   ]);
 
   const limit = classRow?.daily_heart_limit ?? 3;
   const used = usage?.used_count ?? 0;
-  const totalReceived = (myArtworks ?? []).reduce((sum, a) => sum + a.like_count, 0);
 
-  return { limit, remaining: Math.max(limit - used, 0), totalReceived };
+  return { limit, remaining: Math.max(limit - used, 0) };
 }

@@ -2,22 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ArtworkType, TitlePreset } from "@/types/database";
+import {
+  detectArtworkType,
+  FILE_ACCEPT,
+  TYPE_ICONS,
+  TYPE_LABELS,
+  type UploadedArtworkType,
+} from "@/lib/artworkTypes";
+import type { TitlePreset } from "@/types/database";
 
-const ACCEPT_BY_TYPE: Record<Exclude<ArtworkType, "link">, string> = {
-  image: "image/*",
-  video: "video/*",
-  audio: "audio/*",
-  pdf: "application/pdf,.pdf",
-};
-
-const TYPE_LABELS: Record<ArtworkType, string> = {
-  image: "이미지",
-  video: "동영상",
-  audio: "오디오",
-  pdf: "PDF",
-  link: "링크",
-};
+const MODE_LABELS = { file: "파일", link: "링크" } as const;
+type UploadMode = keyof typeof MODE_LABELS;
 
 function generateImageThumbnail(file: File): Promise<Blob | null> {
   return new Promise((resolve) => {
@@ -72,12 +67,14 @@ function generateVideoThumbnail(file: File): Promise<Blob | null> {
 
 export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
   const router = useRouter();
-  const [type, setType] = useState<ArtworkType>("image");
+  const [mode, setMode] = useState<UploadMode>("file");
   const [titlePresets, setTitlePresets] = useState<TitlePreset[] | null>(null);
   const [title, setTitle] = useState("");
   const [aiHelpDescription, setAiHelpDescription] = useState("");
   const [selfDescription, setSelfDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  // 파일을 고르는 순간 형식을 자동으로 판별한다(학생이 형식을 직접 고를 필요가 없다).
+  const [detectedType, setDetectedType] = useState<UploadedArtworkType | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,6 +85,24 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       .then((data) => setTitlePresets(data.titlePresets ?? []))
       .catch(() => setTitlePresets([]));
   }, []);
+
+  function handleFileChange(selected: File | null) {
+    setError(null);
+    if (!selected) {
+      setFile(null);
+      setDetectedType(null);
+      return;
+    }
+    const detected = detectArtworkType(selected);
+    if (!detected) {
+      setFile(null);
+      setDetectedType(null);
+      setError("이미지·동영상·오디오·PDF 파일만 올릴 수 있어요.");
+      return;
+    }
+    setFile(selected);
+    setDetectedType(detected);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,25 +119,16 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       formData.set("title", title);
       formData.set("aiHelpDescription", aiHelpDescription);
       formData.set("selfDescription", selfDescription);
-      formData.set("type", type);
+      formData.set("type", mode);
 
-      if (type === "link") {
+      if (mode === "link") {
         formData.set("linkUrl", linkUrl);
-      } else if (file) {
-        if (
-          type === "pdf" &&
-          file.type !== "application/pdf" &&
-          !file.name.toLowerCase().endsWith(".pdf")
-        ) {
-          setError("PDF 파일만 올릴 수 있습니다.");
-          setLoading(false);
-          return;
-        }
+      } else if (file && detectedType) {
         formData.set("file", file);
         const thumbnail =
-          type === "image"
+          detectedType === "image"
             ? await generateImageThumbnail(file)
-            : type === "video"
+            : detectedType === "video"
               ? await generateVideoThumbnail(file)
               : null;
         if (thumbnail) formData.set("thumbnail", thumbnail, "thumbnail.jpg");
@@ -142,6 +148,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       setAiHelpDescription("");
       setSelfDescription("");
       setFile(null);
+      setDetectedType(null);
       setLinkUrl("");
       onUploaded();
       router.refresh();
@@ -155,19 +162,21 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
       <h2 className="text-base font-bold">작품 올리기</h2>
 
       <div className="flex gap-1 rounded-full bg-zinc-100 p-1 text-xs">
-        {(Object.keys(TYPE_LABELS) as ArtworkType[]).map((t) => (
+        {(Object.keys(MODE_LABELS) as UploadMode[]).map((m) => (
           <button
-            key={t}
+            key={m}
             type="button"
             onClick={() => {
-              setType(t);
+              setMode(m);
+              setError(null);
               setFile(null);
+              setDetectedType(null);
             }}
             className={`flex-1 rounded-full py-1.5 font-medium ${
-              type === t ? "bg-white shadow text-[#6C5CE7]" : "text-zinc-500"
+              mode === m ? "bg-white shadow text-[#6C5CE7]" : "text-zinc-500"
             }`}
           >
-            {TYPE_LABELS[t]}
+            {MODE_LABELS[m]}
           </button>
         ))}
       </div>
@@ -213,7 +222,7 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
         />
       </label>
 
-      {type === "link" ? (
+      {mode === "link" ? (
         <input
           key="link-input"
           type="url"
@@ -224,14 +233,24 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
           className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
         />
       ) : (
-        <input
-          key="file-input"
-          type="file"
-          accept={ACCEPT_BY_TYPE[type]}
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          required
-          className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        />
+        <div className="space-y-1.5">
+          <input
+            key="file-input"
+            type="file"
+            accept={FILE_ACCEPT}
+            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+            required
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
+          {detectedType ? (
+            <p className="flex items-center gap-1 text-xs font-medium text-[#6C5CE7]">
+              <span>{TYPE_ICONS[detectedType]}</span>
+              {TYPE_LABELS[detectedType]} 자료로 올라가요
+            </p>
+          ) : (
+            <p className="text-xs text-zinc-400">이미지·동영상·오디오·PDF를 올릴 수 있어요.</p>
+          )}
+        </div>
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}

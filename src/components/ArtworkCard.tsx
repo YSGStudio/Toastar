@@ -2,13 +2,13 @@
 
 import { HeartIcon } from "@/components/icons";
 import { pastelToneFor } from "@/lib/pastelPalette";
+import { TYPE_ICONS } from "@/lib/artworkTypes";
 import type { ArtworkListItem } from "@/types/client";
 
 function ThumbnailFallback({ type, fallbackClass }: { type: ArtworkListItem["type"]; fallbackClass: string }) {
-  const icon = { audio: "🎵", link: "🔗", video: "🎬", image: "🖼️", pdf: "📄" }[type];
   return (
     <div className={`flex h-full w-full items-center justify-center text-3xl ${fallbackClass}`}>
-      {icon}
+      {TYPE_ICONS[type]}
     </div>
   );
 }

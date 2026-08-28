@@ -5,6 +5,7 @@ import { fetchArtworkList } from "@/lib/artworks";
 import { ARTWORK_BUCKET, artworkFilePath, artworkThumbnailPath } from "@/lib/storagePaths";
 import { fetchLinkPreviewImage } from "@/lib/ogImage";
 import { checkForAbusiveContent } from "@/lib/contentModeration";
+import { detectArtworkType } from "@/lib/artworkTypes";
 import type { ArtworkType } from "@/types/database";
 
 export async function GET(req: NextRequest) {
@@ -25,8 +26,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ artworks });
 }
 
-const ALLOWED_TYPES: ArtworkType[] = ["image", "link", "video", "audio", "pdf"];
-
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user || user.role !== "student") {
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
   const title = String(form.get("title") ?? "").trim();
   const aiHelpDescription = String(form.get("aiHelpDescription") ?? "").trim() || null;
   const selfDescription = String(form.get("selfDescription") ?? "").trim() || null;
-  const type = String(form.get("type") ?? "") as ArtworkType;
+  const isLink = String(form.get("type") ?? "") === "link";
   const linkUrl = String(form.get("linkUrl") ?? "").trim();
   const file = form.get("file");
   const thumbnailFile = form.get("thumbnail");
@@ -45,22 +44,24 @@ export async function POST(req: NextRequest) {
   if (!title) {
     return NextResponse.json({ error: "제목을 선택해 주세요." }, { status: 400 });
   }
-  if (!ALLOWED_TYPES.includes(type)) {
-    return NextResponse.json({ error: "지원하지 않는 작품 형식입니다." }, { status: 400 });
-  }
-  if (type === "link" && !linkUrl) {
+  if (isLink && !linkUrl) {
     return NextResponse.json({ error: "링크 주소를 입력해 주세요." }, { status: 400 });
   }
-  if (type !== "link" && !(file instanceof File)) {
+  if (!isLink && !(file instanceof File)) {
     return NextResponse.json({ error: "파일을 첨부해 주세요." }, { status: 400 });
   }
-  if (
-    type === "pdf" &&
-    file instanceof File &&
-    file.type !== "application/pdf" &&
-    !file.name.toLowerCase().endsWith(".pdf")
-  ) {
-    return NextResponse.json({ error: "PDF 파일만 올릴 수 있습니다." }, { status: 400 });
+
+  // 작품 형식은 클라이언트가 보낸 값이 아니라 실제 파일에서 판별한다.
+  let type: ArtworkType = "link";
+  if (!isLink && file instanceof File) {
+    const detected = detectArtworkType(file);
+    if (!detected) {
+      return NextResponse.json(
+        { error: "이미지·동영상·오디오·PDF 파일만 올릴 수 있어요." },
+        { status: 400 },
+      );
+    }
+    type = detected;
   }
 
   const client = await getScopedSupabaseClient(user);
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
   let filePath = linkUrl;
   let thumbnailPath: string | null = null;
 
-  if (type === "link") {
+  if (isLink) {
     const preview = await fetchLinkPreviewImage(linkUrl);
     if (preview) {
       thumbnailPath = artworkThumbnailPath({ classId: user.classId, studentId: user.studentId, artworkId });

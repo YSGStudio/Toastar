@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { fetchArtworkList } from "@/lib/artworks";
-import { fetchCurrentPeriod } from "@/lib/periods";
+import { fetchCurrentPeriod, fetchOngoingPeriods } from "@/lib/periods";
 import { getHeartStatus } from "@/lib/heartStatus";
 import { ArtworkGrid } from "@/components/ArtworkGrid";
 import { PhaseNotice } from "@/components/PhaseNotice";
@@ -14,10 +14,12 @@ export default async function LatestPage() {
   const isStudent = user.role === "student";
 
   // 학생 화면은 지금이 게시 단계인지 투표 단계인지에 따라 올리기·하트가 갈린다.
+  // 교사는 담당(관리자는 전체) 학급의 진행 중인 기간을 모두 본다.
   // (레이아웃도 같은 조회를 쓰지만 cache()로 묶여 있어 한 번만 실행된다)
-  const [artworks, period, heart] = await Promise.all([
+  const [artworks, period, ongoingPeriods, heart] = await Promise.all([
     fetchArtworkList(user, { scope: "latest" }),
     isStudent ? fetchCurrentPeriod(user, user.classId) : Promise.resolve(null),
+    isStudent ? Promise.resolve([]) : fetchOngoingPeriods(user),
     isStudent ? getHeartStatus(user) : Promise.resolve(null),
   ]);
 
@@ -26,7 +28,30 @@ export default async function LatestPage() {
 
   return (
     <div className="space-y-6">
-      {isStudent && phase && <PhaseNotice phase={phase} heartLimit={heart?.limit ?? 0} />}
+      {isStudent ? (
+        period && (
+          <PhaseNotice
+            phase={period.phase}
+            startDate={period.start_date}
+            endDate={period.end_date}
+            heartLimit={heart?.limit ?? 0}
+          />
+        )
+      ) : (
+        ongoingPeriods.length > 0 && (
+          <div className="space-y-2">
+            {ongoingPeriods.map((p) => (
+              <PhaseNotice
+                key={p.id}
+                phase={p.phase}
+                startDate={p.start_date}
+                endDate={p.end_date}
+                classLabel={p.class_name}
+              />
+            ))}
+          </div>
+        )
+      )}
       {isStudent && <UploadSection phase={phase} alreadyPosted={alreadyPosted} />}
       <ArtworkGrid
         initialArtworks={artworks}

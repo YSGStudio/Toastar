@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { getScopedSupabaseClient, type CurrentUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Period, PeriodStatus } from "@/types/database";
+import type { Period, PeriodStatus, PeriodWithClassName } from "@/types/database";
 
 export async function fetchPeriods(opts: { classId?: string | null; status?: PeriodStatus }) {
   const supabase = await createSupabaseServerClient();
@@ -29,4 +29,33 @@ export const fetchCurrentPeriod = cache(async function fetchCurrentPeriod(
     .neq("phase", "closed")
     .maybeSingle();
   return (data as Period) ?? null;
+});
+
+/**
+ * 지금 진행 중인 기간을 볼 수 있는 범위만큼 조회한다(관리자=전체 학급, 교사=담당 학급, 학생=자기 학급).
+ * 학급 이름은 join 대신 별도 조회로 붙인다. periods는 모든 인증 사용자가 읽을 수 있지만
+ * classes는 RLS가 범위를 좁히므로, classes를 먼저 읽어 그 학급의 기간만 가져오면
+ * 볼 권한이 없는 학급이 이름 없이 섞여 들어오는 일이 없다.
+ */
+export const fetchOngoingPeriods = cache(async function fetchOngoingPeriods(
+  user: CurrentUser,
+): Promise<PeriodWithClassName[]> {
+  const client = await getScopedSupabaseClient(user);
+
+  const { data: classes } = await client.from("classes").select("id, name");
+  if (!classes || classes.length === 0) return [];
+
+  const classNames = new Map(classes.map((c) => [c.id as string, c.name as string]));
+
+  const { data } = await client
+    .from("periods")
+    .select("*")
+    .in("class_id", [...classNames.keys()])
+    .neq("phase", "closed")
+    .order("start_date", { ascending: false });
+
+  return (data ?? []).map((period) => ({
+    ...(period as Period),
+    class_name: classNames.get(period.class_id) ?? null,
+  }));
 });

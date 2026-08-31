@@ -42,6 +42,11 @@ export interface Period {
   created_at: string;
 }
 
+/** 진행 중인 기간 목록에 학급 이름을 붙인 형태(최신 자료 화면의 기간 안내에 쓴다). */
+export interface PeriodWithClassName extends Period {
+  class_name: string | null;
+}
+
 export interface Artwork {
   id: string;
   class_id: string;

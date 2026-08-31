@@ -132,8 +132,8 @@ export function ArtworkGrid({
         }));
         // 하트가 왜 되돌아갔는지 학생이 알 수 있도록 서버 메시지를 그대로 보여준다.
         setNotice(
-          data.code === "DAILY_LIMIT"
-            ? "오늘 하트를 모두 사용했어요"
+          data.code === "HEART_LIMIT"
+            ? "이번 기간에 줄 수 있는 하트를 모두 사용했어요"
             : (data.error ?? "하트를 주지 못했어요. 잠시 후 다시 시도해 주세요."),
         );
       }

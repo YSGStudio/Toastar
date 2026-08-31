@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
   // 제목 검증·비속어 검사·기간 조회는 서로 독립이므로 병렬로 실행한다 (OpenAI 검사가 가장 느리다).
   const combinedText = [aiHelpDescription, selfDescription].filter(Boolean).join("\n");
-  const [{ data: titlePreset }, moderation, { data: activePeriod }] = await Promise.all([
+  const [{ data: titlePreset }, moderation, { data: currentPeriod }] = await Promise.all([
     client
       .from("title_presets")
       .select("id")
@@ -80,9 +80,9 @@ export async function POST(req: NextRequest) {
       : Promise.resolve({ flagged: false, reason: null }),
     client
       .from("periods")
-      .select("id")
+      .select("id, phase")
       .eq("class_id", user.classId)
-      .eq("status", "active")
+      .neq("phase", "closed")
       .maybeSingle(),
   ]);
 
@@ -105,15 +105,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!activePeriod) {
+  if (!currentPeriod) {
     return NextResponse.json({ error: "현재 진행 중인 게시 기간이 없습니다." }, { status: 400 });
+  }
+  // 게시 단계에서만 작품을 올릴 수 있다. 투표가 시작되면 게시는 마감된다.
+  if (currentPeriod.phase !== "posting") {
+    return NextResponse.json(
+      { error: "지금은 투표 기간이라 작품을 올릴 수 없어요.", code: "POSTING_CLOSED" },
+      { status: 400 },
+    );
   }
 
   const { data: existing } = await client
     .from("artworks")
     .select("id")
     .eq("student_id", user.studentId)
-    .eq("period_id", activePeriod.id)
+    .eq("period_id", currentPeriod.id)
     .maybeSingle();
 
   if (existing) {
@@ -167,7 +174,7 @@ export async function POST(req: NextRequest) {
     .insert({
       id: artworkId,
       class_id: user.classId,
-      period_id: activePeriod.id,
+      period_id: currentPeriod.id,
       student_id: user.studentId,
       type,
       file_path: filePath,

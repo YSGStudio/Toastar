@@ -1,5 +1,7 @@
 export type ArtworkType = "image" | "link" | "video" | "audio" | "pdf";
 export type PeriodStatus = "active" | "closed";
+/** 게시 절차 단계: 게시(posting) → 투표(voting) → 종료(closed). */
+export type PeriodPhase = "posting" | "voting" | "closed";
 export type DayType = "weekday" | "weekend";
 export type AccountRole = "admin" | "teacher";
 
@@ -16,7 +18,7 @@ export interface ClassRow {
   teacher_id: string;
   name: string;
   class_code: string;
-  daily_heart_limit: number;
+  period_heart_limit: number;
   award_top_n: number;
   created_at: string;
 }
@@ -34,6 +36,8 @@ export interface Period {
   class_id: string;
   start_date: string;
   end_date: string;
+  phase: PeriodPhase;
+  /** phase에서 파생되는 값(closed면 closed, 그 외 active). DB의 생성 열이라 직접 쓰지 않는다. */
   status: PeriodStatus;
   created_at: string;
 }
@@ -73,9 +77,9 @@ export interface ArtworkLike {
   created_at: string;
 }
 
-export interface DailyHeartUsage {
+export interface PeriodHeartUsage {
   student_id: string;
-  usage_date: string;
+  period_id: string;
   used_count: number;
 }
 

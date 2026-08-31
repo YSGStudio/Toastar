@@ -28,18 +28,19 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createSupabaseServerClient();
 
+  // 진행 중이던 기간(게시·투표 단계)은 새 기간이 시작되면 자동으로 종료된다.
   const { error: closeError } = await supabase
     .from("periods")
-    .update({ status: "closed" })
+    .update({ phase: "closed" })
     .eq("class_id", classId)
-    .eq("status", "active");
+    .neq("phase", "closed");
   if (closeError) {
     return NextResponse.json({ error: closeError.message }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from("periods")
-    .insert({ class_id: classId, start_date: startDate, end_date: endDate, status: "active" })
+    .insert({ class_id: classId, start_date: startDate, end_date: endDate, phase: "posting" })
     .select()
     .single();
 

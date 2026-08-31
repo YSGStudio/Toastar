@@ -40,7 +40,7 @@ export function SettingsTabs({
 }) {
   const tabs = accountRole === "admin" ? ADMIN_TABS : TEACHER_TABS;
   const [tab, setTab] = useState<string>(tabs[0]);
-  const closedPeriods = periods.filter((p) => p.status === "closed");
+  const closedPeriods = periods.filter((p) => p.phase === "closed");
 
   return (
     <div>
@@ -65,7 +65,7 @@ export function SettingsTabs({
       {accountRole === "admin" && tab === "하트 정책" && (
         <HeartLimitForm
           classId={classRow.id}
-          dailyHeartLimit={classRow.daily_heart_limit}
+          periodHeartLimit={classRow.period_heart_limit}
           awardTopN={classRow.award_top_n}
         />
       )}

@@ -31,15 +31,21 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     .from("artwork_likes")
     .insert({ artwork_id: id, student_id: user.studentId });
 
-  // 응답에 서버가 계산한 오늘 잔량을 함께 실어 보낸다. 클라이언트가 낙관적으로 더하고 빼는 값이
+  // 응답에 서버가 계산한 이번 기간 잔량을 함께 실어 보낸다. 클라이언트가 낙관적으로 더하고 빼는 값이
   // 서버와 어긋나는 것(연타·중복 요청·만료된 세션 등)을 매 요청마다 바로잡기 위함이다.
   const heart = await getRemainingHearts(user);
 
   if (error) {
-    if (error.message.includes("DAILY_HEART_LIMIT_EXCEEDED")) {
+    if (error.message.includes("HEART_LIMIT_EXCEEDED")) {
       return NextResponse.json(
-        { error: "오늘 하트를 모두 사용했어요.", code: "DAILY_LIMIT", heart },
+        { error: "이번 기간에 줄 수 있는 하트를 모두 사용했어요.", code: "HEART_LIMIT", heart },
         { status: 429 },
+      );
+    }
+    if (error.message.includes("VOTING_NOT_OPEN")) {
+      return NextResponse.json(
+        { error: "지금은 투표 기간이 아니에요.", code: "VOTING_CLOSED", heart },
+        { status: 400 },
       );
     }
     if (error.code === "23505" || error.message.includes("duplicate key")) {

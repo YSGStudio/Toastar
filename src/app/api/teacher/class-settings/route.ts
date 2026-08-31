@@ -8,11 +8,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "관리자만 하트 정책을 변경할 수 있습니다." }, { status: 403 });
   }
 
-  const { classId, dailyHeartLimit, awardTopN } = await req.json();
+  const { classId, periodHeartLimit, awardTopN } = await req.json();
   if (!classId) return NextResponse.json({ error: "classId가 필요합니다." }, { status: 400 });
 
   const updates: Record<string, number> = {};
-  if (dailyHeartLimit !== undefined) updates.daily_heart_limit = Number(dailyHeartLimit);
+  if (periodHeartLimit !== undefined) updates.period_heart_limit = Number(periodHeartLimit);
   if (awardTopN !== undefined) updates.award_top_n = Number(awardTopN);
 
   const supabase = await createSupabaseServerClient();

@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 
 export function HeartLimitForm({
   classId,
-  dailyHeartLimit,
+  periodHeartLimit,
   awardTopN,
 }: {
   classId: string;
-  dailyHeartLimit: number;
+  periodHeartLimit: number;
   awardTopN: number;
 }) {
   const router = useRouter();
-  const [limit, setLimit] = useState(dailyHeartLimit);
+  const [limit, setLimit] = useState(periodHeartLimit);
   const [topN, setTopN] = useState(awardTopN);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export function HeartLimitForm({
       const res = await fetch("/api/teacher/class-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classId, dailyHeartLimit: limit, awardTopN: topN }),
+        body: JSON.stringify({ classId, periodHeartLimit: limit, awardTopN: topN }),
       });
       if (res.ok) {
         setSaved(true);
@@ -41,7 +41,10 @@ export function HeartLimitForm({
     <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-base font-bold">하트 정책</h2>
       <label className="block text-sm text-zinc-600">
-        학생 1인 1일 하트 한도
+        학생 1인이 한 기간에 쓸 수 있는 하트 수
+        <span className="mt-0.5 block text-xs text-zinc-400">
+          매일 채워지지 않고, 기간이 끝날 때까지 이 개수만 쓸 수 있어요.
+        </span>
         <input
           type="number"
           min={0}
@@ -51,7 +54,7 @@ export function HeartLimitForm({
         />
       </label>
       <label className="block text-sm text-zinc-600">
-        주기당 수상 인원 수
+        기간당 수상 인원 수
         <input
           type="number"
           min={1}

@@ -8,7 +8,8 @@ import { useHeart } from "@/components/HeartContext";
 import { CloudDoodle } from "@/components/illustrations/Doodles";
 import type { ArtworkListItem } from "@/types/client";
 
-const URL_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+// 서명 URL 수명(60분)보다 충분히 짧게 잡아, 만료된 URL이 화면에 남지 않게 한다.
+const URL_REFRESH_INTERVAL_MS = 30 * 60 * 1000;
 
 /**
  * 새로 받아온 목록을 화면에 반영하되, 이미 떠 있는 작품의 서명 URL은 그대로 둔다.
@@ -49,7 +50,7 @@ export function ArtworkGrid({
   // 그때 낙관적 반영을 되돌리면 실제로는 차감된 하트가 화면에서만 되살아난다.
   const pendingLikeIds = useRef<Set<string>>(new Set());
   // 서명 URL을 마지막으로 새로 받아온 시각. 폴링마다 새 URL로 갈아끼우면 이미지를 계속 다시
-  // 내려받게 되므로, 만료(15분)에 여유를 두고 10분에 한 번만 갈아끼운다.
+  // 내려받게 되므로, 만료(60분)에 여유를 두고 30분에 한 번만 갈아끼운다.
   const urlsRefreshedAt = useRef(0);
 
   if (initialArtworks !== prevInitialArtworks) {

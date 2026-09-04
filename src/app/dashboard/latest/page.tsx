@@ -67,8 +67,9 @@ export default async function LatestPage() {
         canLike={canLike}
         currentStudentId={isStudent ? user.studentId : null}
         emptyMessage="아직 게시된 작품이 없어요."
-        // 학생 화면에서는 새 작품과 하트 수를 15초마다 자동으로 받아온다.
-        pollIntervalMs={isStudent ? 15_000 : undefined}
+        // 새 작품과 하트 수를 주기적으로 받아온다. 이 폴링이 서명 URL도 함께 갈아끼우므로
+        // 화면을 오래 열어 두어도 이미지·PDF가 만료되지 않는다. 교사는 더 느린 주기면 충분하다.
+        pollIntervalMs={isStudent ? 15_000 : 60_000}
       />
     </div>
   );

@@ -20,11 +20,16 @@ export default async function LatestPage() {
     fetchArtworkList(user, { scope: "latest" }),
     isStudent ? fetchCurrentPeriod(user, user.classId) : Promise.resolve(null),
     isStudent ? Promise.resolve([]) : fetchOngoingPeriods(user),
-    isStudent ? getHeartStatus(user) : Promise.resolve(null),
+    getHeartStatus(user),
   ]);
 
   const phase = period?.phase ?? null;
   const alreadyPosted = isStudent && artworks.some((a) => a.student_id === user.studentId);
+
+  // 교사는 학급 구분 없이 투표하므로, 투표 단계인 기간이 하나라도 있으면 하트를 줄 수 있다.
+  const canLike = isStudent
+    ? phase === "voting"
+    : ongoingPeriods.some((p) => p.phase === "voting");
 
   return (
     <div className="space-y-6">
@@ -34,6 +39,7 @@ export default async function LatestPage() {
             phase={period.phase}
             startDate={period.start_date}
             endDate={period.end_date}
+            viewerRole="student"
             heartLimit={heart?.limit ?? 0}
           />
         )
@@ -46,7 +52,9 @@ export default async function LatestPage() {
                 phase={p.phase}
                 startDate={p.start_date}
                 endDate={p.end_date}
+                viewerRole="teacher"
                 classLabel={p.class_name}
+                heartLimit={heart?.limit ?? 0}
               />
             ))}
           </div>
@@ -56,7 +64,7 @@ export default async function LatestPage() {
       <ArtworkGrid
         initialArtworks={artworks}
         fetchUrl="/api/artworks?scope=latest"
-        canLike={isStudent && phase === "voting"}
+        canLike={canLike}
         currentStudentId={isStudent ? user.studentId : null}
         emptyMessage="아직 게시된 작품이 없어요."
         // 학생 화면에서는 새 작품과 하트 수를 15초마다 자동으로 받아온다.

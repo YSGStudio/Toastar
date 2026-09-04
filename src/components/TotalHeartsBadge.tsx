@@ -5,7 +5,8 @@ import { TrophyIcon } from "@/components/icons";
 
 export function TotalHeartsBadge() {
   const { heart } = useHeart();
-  if (!heart) return null;
+  // 교사는 받은 하트가 없으므로 배지 자체를 띄우지 않는다.
+  if (!heart || heart.totalReceived === null) return null;
 
   return (
     <span

@@ -13,21 +13,15 @@ function formatDate(isoDate: string) {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
-/**
- * 학생에게는 하트 안내를, 교사에게는 지금 학생들이 무엇을 하는 중인지 알려 준다.
- * heartLimit이 있으면 학생 화면으로 본다.
- */
-function hintFor(phase: PeriodPhase, heartLimit?: number) {
-  const forStudent = heartLimit !== undefined;
+/** 게시 단계는 학생만 올릴 수 있어 안내가 갈리고, 투표 단계는 학생·교사가 똑같이 투표한다. */
+function hintFor(phase: PeriodPhase, viewerRole: "student" | "teacher", heartLimit: number) {
   if (phase === "posting") {
-    return forStudent
+    return viewerRole === "student"
       ? "지금 작품을 올릴 수 있어요. 투표는 선생님이 시작하면 열려요."
       : "학생들이 작품을 올리는 중이에요. 투표는 아직 열리지 않았어요.";
   }
   if (phase === "voting") {
-    return forStudent
-      ? `하트 ${heartLimit}개를 마음에 드는 작품에 나눠 주세요. 새 작품은 올릴 수 없어요.`
-      : "학생들이 투표하는 중이에요. 새 작품은 올릴 수 없어요.";
+    return `하트 ${heartLimit}개를 마음에 드는 작품에 나눠 주세요. 학급 구분 없이 쓸 수 있어요.`;
   }
   return null;
 }
@@ -37,19 +31,21 @@ export function PhaseNotice({
   phase,
   startDate,
   endDate,
+  viewerRole,
   classLabel,
   heartLimit,
 }: {
   phase: PeriodPhase;
   startDate: string;
   endDate: string;
+  viewerRole: "student" | "teacher";
   /** 여러 학급을 함께 보는 교사 화면에서만 붙인다. */
   classLabel?: string | null;
-  /** 학생 화면에서만 넘긴다. 이번 기간에 쓸 수 있는 하트 수. */
-  heartLimit?: number;
+  /** 지금 열려 있는 투표 전체에 쓸 수 있는 하트 수(사람당 총량). */
+  heartLimit: number;
 }) {
   const { label, tone } = PHASE_STYLES[phase];
-  const hint = hintFor(phase, heartLimit);
+  const hint = hintFor(phase, viewerRole, heartLimit);
 
   return (
     <div className={`rounded-2xl px-4 py-3 ${tone}`}>

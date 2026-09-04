@@ -34,9 +34,10 @@ export default async function SettingsPage({
   const { classId } = await searchParams;
   const classRow = (classes.find((c) => c.id === classId) ?? classes[0]) as ClassRow;
 
-  const [periods, { data: loginBlockRules }, { data: awards }, { data: students }, { data: titlePresets }] =
+  const [periods, { data: voteSettings }, { data: loginBlockRules }, { data: awards }, { data: students }, { data: titlePresets }] =
     await Promise.all([
       fetchPeriods({ classId: classRow.id }),
+      supabase.from("vote_settings").select("heart_limit").maybeSingle(),
       supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
       supabase
         .from("award_records")
@@ -53,6 +54,7 @@ export default async function SettingsPage({
       <SettingsTabs
         accountRole={user.accountRole}
         classRow={classRow}
+        heartLimit={voteSettings?.heart_limit ?? 10}
         periods={periods}
         loginBlockRules={(loginBlockRules ?? []) as LoginBlockRule[]}
         awards={awards ?? []}

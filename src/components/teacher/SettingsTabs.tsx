@@ -24,6 +24,7 @@ interface AwardRow {
 export function SettingsTabs({
   accountRole,
   classRow,
+  heartLimit,
   periods,
   loginBlockRules,
   awards,
@@ -32,6 +33,8 @@ export function SettingsTabs({
 }: {
   accountRole: AccountRole;
   classRow: ClassRow;
+  /** 전교 공통 하트 수. */
+  heartLimit: number;
   periods: Period[];
   loginBlockRules: LoginBlockRule[];
   awards: AwardRow[];
@@ -65,7 +68,7 @@ export function SettingsTabs({
       {accountRole === "admin" && tab === "하트 정책" && (
         <HeartLimitForm
           classId={classRow.id}
-          periodHeartLimit={classRow.period_heart_limit}
+          heartLimit={heartLimit}
           awardTopN={classRow.award_top_n}
         />
       )}

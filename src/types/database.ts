@@ -18,7 +18,6 @@ export interface ClassRow {
   teacher_id: string;
   name: string;
   class_code: string;
-  period_heart_limit: number;
   award_top_n: number;
   created_at: string;
 }
@@ -75,17 +74,27 @@ export interface ArtworkWithJoins extends Artwork {
   is_winner?: boolean;
 }
 
+/** 투표자는 학생이거나 교사이거나, 둘 중 정확히 하나다(DB의 check 제약으로 강제). */
 export interface ArtworkLike {
   id: string;
   artwork_id: string;
-  student_id: string;
+  student_id: string | null;
+  teacher_id: string | null;
   created_at: string;
 }
 
 export interface PeriodHeartUsage {
-  student_id: string;
+  id: string;
+  student_id: string | null;
+  teacher_id: string | null;
   period_id: string;
   used_count: number;
+}
+
+/** 전교 공통 투표 설정. 행이 하나뿐이다. */
+export interface VoteSettings {
+  id: boolean;
+  heart_limit: number;
 }
 
 export interface AwardRecord {

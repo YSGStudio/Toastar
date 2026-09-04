@@ -5,7 +5,8 @@ import { createContext, useContext, useState } from "react";
 interface HeartState {
   limit: number;
   remaining: number;
-  totalReceived: number;
+  /** 내가 올린 작품이 받은 하트 누적. 작품을 올리지 않는 교사는 null이다. */
+  totalReceived: number | null;
 }
 
 interface HeartContextValue {

@@ -65,6 +65,48 @@ function generateVideoThumbnail(file: File): Promise<Blob | null> {
   });
 }
 
+/**
+ * PDF 첫 페이지를 그려 미리보기 이미지를 만든다.
+ * pdf.js는 무거워서(수 MB) 실제로 PDF를 고른 순간에만 내려받도록 동적으로 불러온다.
+ */
+async function generatePdfThumbnail(file: File): Promise<Blob | null> {
+  try {
+    const pdfjs = await import("pdfjs-dist");
+    // 워커는 번들러가 함께 내보내도록 상대 URL로 지정한다(외부 CDN에 의존하지 않는다).
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+
+    const loadingTask = pdfjs.getDocument({ data: await file.arrayBuffer() });
+    const doc = await loadingTask.promise;
+    const page = await doc.getPage(1);
+
+    const maxDim = 480;
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({
+      scale: Math.min(1, maxDim / Math.max(base.width, base.height)),
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+
+    // PDF는 배경이 투명할 수 있다. JPEG는 투명도를 검게 채우므로 흰 바탕을 깔아 준다.
+    await page.render({ canvas, viewport, background: "#ffffff" }).promise;
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.85),
+    );
+
+    // 워커를 정리하지 않으면 여러 번 올릴 때 워커가 계속 쌓인다.
+    await loadingTask.destroy();
+    return blob;
+  } catch {
+    // 썸네일은 부가 기능이라 실패해도 업로드 자체는 막지 않는다(카드에 📄 아이콘이 뜬다).
+    return null;
+  }
+}
+
 export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
   const router = useRouter();
   const [mode, setMode] = useState<UploadMode>("file");
@@ -130,7 +172,9 @@ export function UploadArtworkForm({ onUploaded }: { onUploaded: () => void }) {
             ? await generateImageThumbnail(file)
             : detectedType === "video"
               ? await generateVideoThumbnail(file)
-              : null;
+              : detectedType === "pdf"
+                ? await generatePdfThumbnail(file)
+                : null;
         if (thumbnail) formData.set("thumbnail", thumbnail, "thumbnail.jpg");
       } else {
         setError("파일을 선택해 주세요.");

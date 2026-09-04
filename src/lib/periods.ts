@@ -32,29 +32,33 @@ export const fetchCurrentPeriod = cache(async function fetchCurrentPeriod(
 });
 
 /**
- * 지금 진행 중인 기간을 볼 수 있는 범위만큼 조회한다(관리자=전체 학급, 교사=담당 학급, 학생=자기 학급).
- * 학급 이름은 join 대신 별도 조회로 붙인다. periods는 모든 인증 사용자가 읽을 수 있지만
- * classes는 RLS가 범위를 좁히므로, classes를 먼저 읽어 그 학급의 기간만 가져오면
- * 볼 권한이 없는 학급이 이름 없이 섞여 들어오는 일이 없다.
+ * 지금 진행 중인 기간을 조회한다.
+ * 투표는 학급 구분 없이 이뤄지므로 교사에게는 진행 중인 기간을 모두 보여 준다.
+ * (periods는 모든 인증 사용자가 읽을 수 있고, 작품 목록도 이미 전교 공개다)
+ * 학급 이름은 classes의 RLS가 허용하는 것만 붙는다. 읽을 수 없는 학급은 이름 없이 기간만 보인다.
  */
 export const fetchOngoingPeriods = cache(async function fetchOngoingPeriods(
   user: CurrentUser,
 ): Promise<PeriodWithClassName[]> {
   const client = await getScopedSupabaseClient(user);
 
-  const { data: classes } = await client.from("classes").select("id, name");
-  if (!classes || classes.length === 0) return [];
-
-  const classNames = new Map(classes.map((c) => [c.id as string, c.name as string]));
-
-  const { data } = await client
+  let periodQuery = client
     .from("periods")
     .select("*")
-    .in("class_id", [...classNames.keys()])
     .neq("phase", "closed")
     .order("start_date", { ascending: false });
 
-  return (data ?? []).map((period) => ({
+  // 학생은 자기 학급 기간만 본다(투표 화면이 아니라 안내용이다).
+  if (user.role === "student") periodQuery = periodQuery.eq("class_id", user.classId);
+
+  const [{ data: periods }, { data: classes }] = await Promise.all([
+    periodQuery,
+    client.from("classes").select("id, name"),
+  ]);
+
+  const classNames = new Map((classes ?? []).map((c) => [c.id as string, c.name as string]));
+
+  return (periods ?? []).map((period) => ({
     ...(period as Period),
     class_name: classNames.get(period.class_id) ?? null,
   }));

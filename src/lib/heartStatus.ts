@@ -4,7 +4,7 @@ import { getScopedSupabaseClient, type CurrentUser } from "@/lib/auth/session";
 export interface HeartStatus {
   limit: number;
   remaining: number;
-  /** 내가 올린 작품이 받은 하트 누적. 작품을 올리지 않는 교사는 null이다. */
+  /** 투표가 끝난 기간에 내 작품이 받은 하트 누적. 작품을 올리지 않는 교사는 null이다. */
   totalReceived: number | null;
 }
 
@@ -21,11 +21,13 @@ export const getHeartStatus = cache(async function getHeartStatus(
 
   const [budget, totalReceived] = await Promise.all([
     fetchHeartBudget(user),
+    // 투표가 끝나기 전에는 받은 하트를 공개하지 않으므로, 끝난 기간의 하트만 누적한다.
     user.role === "student"
       ? client
           .from("artworks")
-          .select("like_count")
+          .select("like_count, periods!inner(phase)")
           .eq("student_id", user.studentId)
+          .eq("periods.phase", "closed")
           .then(({ data }) => (data ?? []).reduce((sum, a) => sum + a.like_count, 0))
       : Promise.resolve(null),
   ]);

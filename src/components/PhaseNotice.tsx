@@ -13,7 +13,7 @@ function formatDate(isoDate: string) {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
-/** 게시 단계는 학생만 올릴 수 있어 안내가 갈리고, 투표 단계는 학생·교사가 똑같이 투표한다. */
+/** 게시 단계는 학생만 올릴 수 있어 안내가 갈리고, 투표 단계에는 학생에게 결과가 가려진다는 안내를 붙인다. */
 function hintFor(phase: PeriodPhase, viewerRole: "student" | "teacher", heartLimit: number) {
   if (phase === "posting") {
     return viewerRole === "student"
@@ -21,7 +21,9 @@ function hintFor(phase: PeriodPhase, viewerRole: "student" | "teacher", heartLim
       : "학생들이 작품을 올리는 중이에요. 투표는 아직 열리지 않았어요.";
   }
   if (phase === "voting") {
-    return `하트 ${heartLimit}개를 마음에 드는 작품에 나눠 주세요. 학급 구분 없이 쓸 수 있어요.`;
+    return viewerRole === "student"
+      ? `하트 ${heartLimit}개를 학급 구분 없이 나눠 주세요. 올린 친구 이름과 하트 수는 투표가 끝나면 공개돼요.`
+      : `하트 ${heartLimit}개를 마음에 드는 작품에 나눠 주세요. 학급 구분 없이 쓸 수 있어요.`;
   }
   return null;
 }

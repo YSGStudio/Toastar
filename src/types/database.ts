@@ -18,7 +18,6 @@ export interface ClassRow {
   teacher_id: string;
   name: string;
   class_code: string;
-  award_top_n: number;
   created_at: string;
 }
 
@@ -104,6 +103,8 @@ export interface AwardRecord {
   student_id: string;
   artwork_id: string;
   heart_count: number;
+  /** 학급(기간) 안에서의 하트 순위. 동점은 같은 순위다. */
+  rank: number;
   awarded_at: string;
 }
 

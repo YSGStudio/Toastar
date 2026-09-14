@@ -5,7 +5,7 @@ import { createContext, useContext, useState } from "react";
 interface HeartState {
   limit: number;
   remaining: number;
-  /** 내가 올린 작품이 받은 하트 누적. 작품을 올리지 않는 교사는 null이다. */
+  /** 투표가 끝난 기간에 내 작품이 받은 하트 누적. 작품을 올리지 않는 교사는 null이다. */
   totalReceived: number | null;
 }
 

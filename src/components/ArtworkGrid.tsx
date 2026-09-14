@@ -24,6 +24,14 @@ function keepSignedUrls(prev: ArtworkListItem[], next: ArtworkListItem[]): Artwo
   });
 }
 
+/**
+ * 하트를 준 직후 화면의 하트 수를 낙관적으로 더하거나 뺀다.
+ * 가려진 수(null)는 건드리지 않는다. 숫자가 바뀌는 걸 보고 원래 값을 역산하지 못하게 하기 위함이다.
+ */
+function shiftCount(count: number | null, delta: number) {
+  return count === null ? null : Math.max(count + delta, 0);
+}
+
 export function ArtworkGrid({
   initialArtworks,
   fetchUrl,
@@ -106,7 +114,7 @@ export function ArtworkGrid({
     pendingLikeIds.current.add(artwork.id);
     setNotice(null);
 
-    applyToArtwork(artwork.id, (a) => ({ ...a, liked_by_me: true, like_count: a.like_count + 1 }));
+    applyToArtwork(artwork.id, (a) => ({ ...a, liked_by_me: true, like_count: shiftCount(a.like_count, 1) }));
     decrementHeart();
 
     try {
@@ -123,13 +131,13 @@ export function ArtworkGrid({
         applyToArtwork(artwork.id, (a) => ({
           ...a,
           liked_by_me: true,
-          like_count: Math.max(a.like_count - 1, 0),
+          like_count: shiftCount(a.like_count, -1),
         }));
       } else {
         applyToArtwork(artwork.id, (a) => ({
           ...a,
           liked_by_me: false,
-          like_count: Math.max(a.like_count - 1, 0),
+          like_count: shiftCount(a.like_count, -1),
         }));
         // 하트가 왜 되돌아갔는지 학생이 알 수 있도록 서버 메시지를 그대로 보여준다.
         setNotice(
@@ -146,7 +154,7 @@ export function ArtworkGrid({
       applyToArtwork(artwork.id, (a) => ({
         ...a,
         liked_by_me: false,
-        like_count: Math.max(a.like_count - 1, 0),
+        like_count: shiftCount(a.like_count, -1),
       }));
       incrementHeart();
       setNotice("네트워크 상태를 확인해 주세요.");

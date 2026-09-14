@@ -9,7 +9,9 @@ export default async function MyArtworksPage() {
   if (user.role !== "student") redirect("/dashboard/latest");
 
   const artworks = await fetchArtworkList(user, { scope: "mine" });
-  const totalHearts = artworks.reduce((sum, a) => sum + a.like_count, 0);
+  // 투표가 끝나기 전인 작품은 하트 수가 가려져 내려오므로 합계에서 빠진다.
+  const totalHearts = artworks.reduce((sum, a) => sum + (a.like_count ?? 0), 0);
+  const hasHiddenResults = artworks.some((a) => a.results_hidden);
 
   return (
     <div className="space-y-4">
@@ -17,6 +19,9 @@ export default async function MyArtworksPage() {
         <span className="font-semibold text-zinc-900">{artworks.length}개</span>
         <span className="text-zinc-500">의 작품 · 받은 하트 </span>
         <span className="font-semibold text-amber-500">{totalHearts}개</span>
+        {hasHiddenResults && (
+          <p className="mt-1 text-xs text-zinc-400">진행 중인 기간의 하트는 투표가 끝나면 더해져요.</p>
+        )}
       </div>
       <ArtworkGrid
         initialArtworks={artworks}

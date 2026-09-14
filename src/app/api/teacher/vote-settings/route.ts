@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 /**
  * 전교 공통 투표 설정. 하트는 학급이 아니라 사람 단위로 주어지므로 설정도 한 곳에만 둔다.
- * (학급마다 다른 수상 인원수는 그대로 class-settings에서 관리한다)
  */
 export async function PATCH(req: NextRequest) {
   const user = await getCurrentUser();

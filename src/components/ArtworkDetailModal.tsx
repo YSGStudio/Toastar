@@ -1,6 +1,7 @@
 "use client";
 
 import { HeartIcon, ShareIcon } from "@/components/icons";
+import { HiddenValue } from "@/components/HiddenValue";
 import type { ArtworkListItem } from "@/types/client";
 
 const AVATAR_COLORS = ["#F58529", "#DD2A7B", "#8134AF", "#515BD4", "#6C5CE7", "#00A86B"];
@@ -25,6 +26,8 @@ export function ArtworkDetailModal({
   onDelete?: () => void;
   deleting?: boolean;
 }) {
+  // 투표가 끝나기 전 학생 화면에서는 작성자 이름이 지워져 내려온다(본인 작품은 예외).
+  const nameHidden = artwork.results_hidden && !artwork.students;
   const authorName = artwork.students?.name ?? "익명";
 
   return (
@@ -37,12 +40,14 @@ export function ArtworkDetailModal({
           <div className="flex items-center gap-2">
             <span
               className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ backgroundColor: avatarColor(authorName) }}
+              style={{ backgroundColor: nameHidden ? "#d4d4d8" : avatarColor(authorName) }}
             >
-              {authorName.slice(0, 1)}
+              {nameHidden ? "?" : authorName.slice(0, 1)}
             </span>
-            <span className="text-sm font-semibold text-zinc-900">{authorName}</span>
-            {artwork.is_winner && <span className="text-xs">👑 수상작</span>}
+            <span className="text-sm font-semibold text-zinc-900">
+              {nameHidden ? <HiddenValue placeholder="학생 이름" /> : authorName}
+            </span>
+            {artwork.is_winner && <span className="text-xs">👑 1등</span>}
           </div>
           <div className="flex items-center gap-2">
             {artwork.can_manage && onDelete && (
@@ -149,7 +154,9 @@ export function ArtworkDetailModal({
             >
               <HeartIcon filled={artwork.liked_by_me} className="h-7 w-7" />
             </button>
-            <p className="text-sm font-semibold text-zinc-900">좋아요 {artwork.like_count}개</p>
+            <p className="text-sm font-semibold text-zinc-900">
+              좋아요 {artwork.like_count === null ? <HiddenValue placeholder="00" /> : artwork.like_count}개
+            </p>
           </div>
         </div>
       </div>

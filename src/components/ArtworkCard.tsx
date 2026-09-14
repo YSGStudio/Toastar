@@ -1,6 +1,7 @@
 "use client";
 
 import { HeartIcon } from "@/components/icons";
+import { HiddenValue } from "@/components/HiddenValue";
 import { pastelToneFor } from "@/lib/pastelPalette";
 import { TYPE_ICONS } from "@/lib/artworkTypes";
 import type { ArtworkListItem } from "@/types/client";
@@ -62,7 +63,9 @@ export function ArtworkCard({
       <div className="px-1.5 py-1.5">
         <p className="truncate text-xs font-semibold text-zinc-900">{artwork.title}</p>
         <div className="mt-0.5 flex items-center justify-between">
-          <span className="truncate text-[11px] text-zinc-600">{artwork.students?.name ?? "익명"}</span>
+          <span className="truncate text-[11px] text-zinc-600">
+            {artwork.students?.name ?? (artwork.results_hidden ? <HiddenValue placeholder="학생이름" /> : "익명")}
+          </span>
           <button
             type="button"
             disabled={!canLike}
@@ -75,7 +78,7 @@ export function ArtworkCard({
             } ${canLike ? "cursor-pointer" : "cursor-default"}`}
           >
             <HeartIcon filled={artwork.liked_by_me} className="h-3.5 w-3.5" />
-            {artwork.like_count}
+            {artwork.like_count === null ? <HiddenValue placeholder="00" /> : artwork.like_count}
           </button>
         </div>
       </div>

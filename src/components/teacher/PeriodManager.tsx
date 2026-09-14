@@ -7,7 +7,7 @@ import type { Period, PeriodPhase } from "@/types/database";
 const PHASE_STEPS: { phase: PeriodPhase; label: string; hint: string }[] = [
   { phase: "posting", label: "게시", hint: "학생들이 작품을 올립니다. 투표는 아직 열리지 않습니다." },
   { phase: "voting", label: "투표", hint: "게시가 마감되고, 학생들이 하트를 나눠 줍니다." },
-  { phase: "closed", label: "종료", hint: "기간이 끝났습니다. 시상 기록 탭에서 집계할 수 있습니다." },
+  { phase: "closed", label: "종료", hint: "기간이 끝났습니다. 순위 집계 탭에서 학급별 순위를 집계할 수 있습니다." },
 ];
 
 export function PeriodManager({ classId, periods }: { classId: string; periods: Period[] }) {
@@ -49,7 +49,7 @@ export function PeriodManager({ classId, periods }: { classId: string; periods: 
     const confirmMessage =
       next === "voting"
         ? "투표를 시작할까요? 지금부터 학생들은 작품을 올릴 수 없고 하트를 줄 수 있습니다."
-        : "투표를 종료할까요? 되돌릴 수 없으며, 이후에는 시상 집계만 가능합니다.";
+        : "투표를 종료할까요? 되돌릴 수 없습니다.\n종료하면 학생들에게도 작품을 올린 학생 이름과 하트 수가 공개됩니다.";
     if (!confirm(confirmMessage)) return;
     await send("PATCH", `/api/periods/${current.id}`, { phase: next }, "단계를 넘기지 못했습니다.");
   }

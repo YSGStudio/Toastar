@@ -6,20 +6,12 @@ import { HeartLimitForm } from "@/components/teacher/HeartLimitForm";
 import { LoginBlockRulesForm } from "@/components/teacher/LoginBlockRulesForm";
 import { StudentManager } from "@/components/teacher/StudentManager";
 import { TitlePresetsManager } from "@/components/teacher/TitlePresetsManager";
-import { AwardRecordsPanel } from "@/components/teacher/AwardRecordsPanel";
+import { ClassRankingPanel, type RankingRow } from "@/components/teacher/ClassRankingPanel";
 import type { AccountRole, ClassRow, LoginBlockRule, Period, Student, TitlePreset } from "@/types/database";
 
-const ADMIN_TABS = ["기간 관리", "하트 정책", "로그인 차단", "시상 기록"] as const;
-const TEACHER_TABS = ["학생 관리", "제목 관리", "시상 기록"] as const;
-
-interface AwardRow {
-  id: string;
-  heart_count: number;
-  awarded_at: string;
-  artworks: { title: string } | null;
-  students: { name: string } | null;
-  periods: { start_date: string; end_date: string } | null;
-}
+const ADMIN_TABS = ["기간 관리", "하트 정책", "로그인 차단", "순위 집계"] as const;
+// 교사는 환경설정에 들어오면 자기 반 순위를 가장 먼저 본다.
+const TEACHER_TABS = ["우리 반 순위", "학생 관리", "제목 관리"] as const;
 
 export function SettingsTabs({
   accountRole,
@@ -27,7 +19,7 @@ export function SettingsTabs({
   heartLimit,
   periods,
   loginBlockRules,
-  awards,
+  rankings,
   students,
   titlePresets,
 }: {
@@ -37,13 +29,12 @@ export function SettingsTabs({
   heartLimit: number;
   periods: Period[];
   loginBlockRules: LoginBlockRule[];
-  awards: AwardRow[];
+  rankings: RankingRow[];
   students: Student[];
   titlePresets: TitlePreset[];
 }) {
   const tabs = accountRole === "admin" ? ADMIN_TABS : TEACHER_TABS;
   const [tab, setTab] = useState<string>(tabs[0]);
-  const closedPeriods = periods.filter((p) => p.phase === "closed");
 
   return (
     <div>
@@ -65,13 +56,7 @@ export function SettingsTabs({
       {accountRole === "admin" && tab === "기간 관리" && (
         <PeriodManager classId={classRow.id} periods={periods} />
       )}
-      {accountRole === "admin" && tab === "하트 정책" && (
-        <HeartLimitForm
-          classId={classRow.id}
-          heartLimit={heartLimit}
-          awardTopN={classRow.award_top_n}
-        />
-      )}
+      {accountRole === "admin" && tab === "하트 정책" && <HeartLimitForm heartLimit={heartLimit} />}
       {accountRole === "admin" && tab === "로그인 차단" && (
         <LoginBlockRulesForm classId={classRow.id} rules={loginBlockRules} />
       )}
@@ -81,11 +66,11 @@ export function SettingsTabs({
       {accountRole === "teacher" && tab === "제목 관리" && (
         <TitlePresetsManager classId={classRow.id} initialTitlePresets={titlePresets} />
       )}
-      {tab === "시상 기록" && (
-        <AwardRecordsPanel
-          closedPeriods={closedPeriods}
-          awards={awards}
-          canManage={accountRole === "admin"}
+      {(tab === "순위 집계" || tab === "우리 반 순위") && (
+        <ClassRankingPanel
+          classLabel={classRow.name}
+          rankings={rankings}
+          canAggregate={accountRole === "admin"}
         />
       )}
     </div>

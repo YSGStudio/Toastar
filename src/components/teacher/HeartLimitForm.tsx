@@ -4,18 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function HeartLimitForm({
-  classId,
   heartLimit,
-  awardTopN,
 }: {
-  classId: string;
   /** 전교 공통값. 학급을 바꿔도 같은 값이 보인다. */
   heartLimit: number;
-  awardTopN: number;
 }) {
   const router = useRouter();
   const [limit, setLimit] = useState(heartLimit);
-  const [topN, setTopN] = useState(awardTopN);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,23 +21,13 @@ export function HeartLimitForm({
     setSaved(false);
     setError(null);
     try {
-      // 하트는 전교 공통, 수상 인원수는 학급별이라 저장 위치가 다르다.
-      const [heartRes, classRes] = await Promise.all([
-        fetch("/api/teacher/vote-settings", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ heartLimit: limit }),
-        }),
-        fetch("/api/teacher/class-settings", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ classId, awardTopN: topN }),
-        }),
-      ]);
-
-      if (!heartRes.ok || !classRes.ok) {
-        const failed = !heartRes.ok ? heartRes : classRes;
-        const data = await failed.json().catch(() => ({}));
+      const res = await fetch("/api/teacher/vote-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heartLimit: limit }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setError(data.error ?? "저장에 실패했습니다.");
         return;
       }
@@ -67,17 +52,6 @@ export function HeartLimitForm({
           min={0}
           value={limit}
           onChange={(e) => setLimit(Number(e.target.value))}
-          className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </label>
-      <label className="block text-sm text-zinc-600">
-        기간당 수상 인원 수
-        <span className="mt-0.5 block text-xs text-zinc-400">이 학급에만 적용돼요.</span>
-        <input
-          type="number"
-          min={1}
-          value={topN}
-          onChange={(e) => setTopN(Number(e.target.value))}
           className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
         />
       </label>

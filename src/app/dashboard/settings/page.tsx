@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchPeriods } from "@/lib/periods";
 import { ClassSwitcher } from "@/components/teacher/ClassSwitcher";
 import { SettingsTabs } from "@/components/teacher/SettingsTabs";
+import type { RankingRow } from "@/components/teacher/ClassRankingPanel";
 import type { ClassRow, LoginBlockRule } from "@/types/database";
 
 export default async function SettingsPage({
@@ -34,16 +35,17 @@ export default async function SettingsPage({
   const { classId } = await searchParams;
   const classRow = (classes.find((c) => c.id === classId) ?? classes[0]) as ClassRow;
 
-  const [periods, { data: voteSettings }, { data: loginBlockRules }, { data: awards }, { data: students }, { data: titlePresets }] =
+  const [periods, { data: voteSettings }, { data: loginBlockRules }, { data: rankings }, { data: students }, { data: titlePresets }] =
     await Promise.all([
       fetchPeriods({ classId: classRow.id }),
       supabase.from("vote_settings").select("heart_limit").maybeSingle(),
       supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
       supabase
         .from("award_records")
-        .select("*, artworks(title), students(name), periods(start_date, end_date)")
+        .select("id, period_id, rank, heart_count, awarded_at, artworks(title), students(name), periods(start_date, end_date)")
         .eq("class_id", classRow.id)
-        .order("awarded_at", { ascending: false }),
+        .order("awarded_at", { ascending: false })
+        .order("rank", { ascending: true }),
       supabase.from("students").select("*").eq("class_id", classRow.id).order("name", { ascending: true }),
       supabase.from("title_presets").select("*").eq("class_id", classRow.id).order("title", { ascending: true }),
     ]);
@@ -57,7 +59,9 @@ export default async function SettingsPage({
         heartLimit={voteSettings?.heart_limit ?? 10}
         periods={periods}
         loginBlockRules={(loginBlockRules ?? []) as LoginBlockRule[]}
-        awards={awards ?? []}
+        // DB 타입을 생성해 두지 않아 Supabase가 조인을 배열로 추론한다. 순위 기록 → 작품·학생·기간은
+        // 모두 다대일이라 실제 응답은 객체이므로 순위표 행 모양으로 맞춰 준다.
+        rankings={(rankings ?? []) as unknown as RankingRow[]}
         students={students ?? []}
         titlePresets={titlePresets ?? []}
       />

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 
+/** 학급마다 순위표에 올리는 인원. 동점은 같은 순위라 이보다 많아질 수 있다. */
+const RANKING_SIZE = 10;
+
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
@@ -13,7 +16,8 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("award_records")
     .select("*, artworks(title, type), students(name), periods(start_date, end_date)")
-    .order("awarded_at", { ascending: false });
+    .order("awarded_at", { ascending: false })
+    .order("rank", { ascending: true });
 
   if (classId) query = query.eq("class_id", classId);
   if (periodId) query = query.eq("period_id", periodId);
@@ -23,64 +27,36 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ awards: data });
 }
 
-export async function POST(req: NextRequest) {
+/**
+ * 투표가 끝난 모든 학급을 한 번에 집계한다.
+ * 학급마다 가장 최근에 끝난 기간을 골라 하트 순으로 상위 10명을 뽑는다(DB 함수가 한 트랜잭션으로 처리).
+ */
+export async function POST() {
   const user = await getCurrentUser();
   if (!user || user.role !== "teacher" || user.accountRole !== "admin") {
-    return NextResponse.json({ error: "관리자만 시상을 집계할 수 있습니다." }, { status: 403 });
+    return NextResponse.json({ error: "관리자만 순위를 집계할 수 있습니다." }, { status: 403 });
   }
-
-  const { periodId } = await req.json();
-  if (!periodId) return NextResponse.json({ error: "periodId가 필요합니다." }, { status: 400 });
 
   const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("aggregate_class_rankings", { p_size: RANKING_SIZE });
 
-  const { data: period } = await supabase
-    .from("periods")
-    .select("*, classes(id, teacher_id, award_top_n)")
-    .eq("id", periodId)
-    .single();
-
-  if (!period) return NextResponse.json({ error: "기간을 찾을 수 없습니다." }, { status: 404 });
-  if (period.status !== "closed") {
-    return NextResponse.json({ error: "아직 진행 중인 기간은 집계할 수 없습니다." }, { status: 400 });
+  if (error) {
+    if (error.message.includes("ADMIN_ONLY")) {
+      return NextResponse.json({ error: "관리자만 순위를 집계할 수 있습니다." }, { status: 403 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  const classInfo = period.classes as unknown as { award_top_n: number };
-  const topN = classInfo?.award_top_n ?? 1;
-
-  const { data: artworks, error: artworksError } = await supabase
-    .from("artworks")
-    .select("id, student_id, like_count")
-    .eq("period_id", periodId)
-    .order("like_count", { ascending: false });
-
-  if (artworksError) return NextResponse.json({ error: artworksError.message }, { status: 400 });
-  if (!artworks || artworks.length === 0) {
-    return NextResponse.json({ error: "이 기간에 게시된 작품이 없습니다." }, { status: 400 });
+  const results = (data ?? []) as { result_class_id: string; ranked_count: number }[];
+  if (results.length === 0) {
+    return NextResponse.json(
+      { error: "집계할 수 있는 기간이 없어요. 투표가 끝난 기간에 하트를 받은 작품이 있어야 해요." },
+      { status: 400 },
+    );
   }
 
-  const cutoffValue = artworks[Math.min(topN, artworks.length) - 1]?.like_count ?? 0;
-  const winners = artworks.filter((a) => a.like_count >= cutoffValue && a.like_count > 0);
-
-  if (winners.length === 0) {
-    return NextResponse.json({ error: "좋아요를 받은 작품이 없어 시상할 수 없습니다." }, { status: 400 });
-  }
-
-  await supabase.from("award_records").delete().eq("period_id", periodId);
-
-  const { data: inserted, error: insertError } = await supabase
-    .from("award_records")
-    .insert(
-      winners.map((w) => ({
-        class_id: period.class_id,
-        period_id: periodId,
-        student_id: w.student_id,
-        artwork_id: w.id,
-        heart_count: w.like_count,
-      })),
-    )
-    .select();
-
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 400 });
-  return NextResponse.json({ awards: inserted });
+  return NextResponse.json({
+    classCount: results.length,
+    studentCount: results.reduce((sum, r) => sum + r.ranked_count, 0),
+  });
 }

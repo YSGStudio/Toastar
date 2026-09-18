@@ -85,6 +85,8 @@ export async function fetchArtworkList(
       liked_by_me: likedSet.has(a.id),
       is_winner: winnerSet.has(a.id),
       can_manage: ownedClassIds.has(a.class_id),
+      // 학생은 게시 단계 동안만 자기 작품을 고치거나 지울 수 있다(투표가 시작되면 잠긴다).
+      can_edit: isMine && phase === "posting",
     };
   }) as ArtworkListItem[];
 }

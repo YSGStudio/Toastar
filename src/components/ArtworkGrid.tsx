@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArtworkCard } from "@/components/ArtworkCard";
 import { ArtworkDetailModal } from "@/components/ArtworkDetailModal";
+import type { ArtworkEdits } from "@/components/ArtworkEditForm";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useHeart } from "@/components/HeartContext";
 import { CloudDoodle } from "@/components/illustrations/Doodles";
@@ -54,6 +56,7 @@ export function ArtworkGrid({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [prevInitialArtworks, setPrevInitialArtworks] = useState(initialArtworks);
   const { decrementHeart, incrementHeart, syncHeart } = useHeart();
+  const router = useRouter();
   // 전송 중인 하트 요청. 연타로 같은 작품에 두 번 요청이 나가면 서버가 409로 거절하는데,
   // 그때 낙관적 반영을 되돌리면 실제로는 차감된 하트가 화면에서만 되살아난다.
   const pendingLikeIds = useRef<Set<string>>(new Set());
@@ -171,12 +174,30 @@ export function ArtworkGrid({
       if (res.ok) {
         setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
         setSelectedId(null);
+        // 학생이 자기 작품을 지우면 다시 올릴 수 있으므로 '작품 올리기'와 '내 작품' 합계를 새로 그린다.
+        router.refresh();
       } else {
         const data = await res.json().catch(() => ({}));
         alert(data.error ?? "삭제에 실패했습니다.");
       }
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleSave(artwork: ArtworkListItem, edits: ArtworkEdits): Promise<string | null> {
+    try {
+      const res = await fetch(`/api/artworks/${artwork.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(edits),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return data.error ?? "수정하지 못했어요. 잠시 후 다시 시도해 주세요.";
+      applyToArtwork(artwork.id, (a) => ({ ...a, ...data.artwork }));
+      return null;
+    } catch {
+      return "네트워크 상태를 확인해 주세요.";
     }
   }
 
@@ -215,6 +236,7 @@ export function ArtworkGrid({
           onClose={() => setSelectedId(null)}
           onToggleLike={() => giveHeart(selected)}
           onDelete={() => handleDelete(selected)}
+          onSave={(edits) => handleSave(selected, edits)}
           deleting={deletingId === selected.id}
         />
       )}

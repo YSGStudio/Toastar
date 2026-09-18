@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { HeartIcon, ShareIcon } from "@/components/icons";
+import { ArtworkEditForm, type ArtworkEdits } from "@/components/ArtworkEditForm";
 import { HiddenValue } from "@/components/HiddenValue";
 import type { ArtworkListItem } from "@/types/client";
 
@@ -17,6 +19,7 @@ export function ArtworkDetailModal({
   onClose,
   onToggleLike,
   onDelete,
+  onSave,
   deleting,
 }: {
   artwork: ArtworkListItem;
@@ -24,11 +27,14 @@ export function ArtworkDetailModal({
   onClose: () => void;
   onToggleLike: () => void;
   onDelete?: () => void;
+  /** 학생 본인 작품(게시 기간)의 제목·설명 수정. 실패하면 오류 문구를 돌려준다. */
+  onSave?: (edits: ArtworkEdits) => Promise<string | null>;
   deleting?: boolean;
 }) {
   // 투표가 끝나기 전 학생 화면에서는 작성자 이름이 지워져 내려온다(본인 작품은 예외).
   const nameHidden = artwork.results_hidden && !artwork.students;
   const authorName = artwork.students?.name ?? "익명";
+  const [editing, setEditing] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-0 sm:p-4" onClick={onClose}>
@@ -50,7 +56,16 @@ export function ArtworkDetailModal({
             {artwork.is_winner && <span className="text-xs">👑 1등</span>}
           </div>
           <div className="flex items-center gap-2">
-            {artwork.can_manage && onDelete && (
+            {artwork.can_edit && onSave && !editing && (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="text-xs font-medium text-[#6C5CE7]"
+              >
+                수정
+              </button>
+            )}
+            {(artwork.can_manage || artwork.can_edit) && onDelete && (
               <button
                 type="button"
                 onClick={onDelete}
@@ -132,18 +147,32 @@ export function ArtworkDetailModal({
         </div>
 
         <div className="px-3 py-2">
-          <p className="text-sm font-medium text-zinc-900">{artwork.title}</p>
-          {artwork.ai_help_description && (
-            <div className="mt-2 rounded-md bg-sky-50 px-2.5 py-2">
-              <p className="text-[11px] font-semibold text-sky-600">AI의 도움을 받은 점</p>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.ai_help_description}</p>
-            </div>
-          )}
-          {artwork.self_description && (
-            <div className="mt-2 rounded-md bg-emerald-50 px-2.5 py-2">
-              <p className="text-[11px] font-semibold text-emerald-600">내가 스스로 한 점</p>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.self_description}</p>
-            </div>
+          {editing && onSave ? (
+            <ArtworkEditForm
+              artwork={artwork}
+              onSave={async (edits) => {
+                const message = await onSave(edits);
+                if (!message) setEditing(false);
+                return message;
+              }}
+              onCancel={() => setEditing(false)}
+            />
+          ) : (
+            <>
+              <p className="text-sm font-medium text-zinc-900">{artwork.title}</p>
+              {artwork.ai_help_description && (
+                <div className="mt-2 rounded-md bg-sky-50 px-2.5 py-2">
+                  <p className="text-[11px] font-semibold text-sky-600">AI의 도움을 받은 점</p>
+                  <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.ai_help_description}</p>
+                </div>
+              )}
+              {artwork.self_description && (
+                <div className="mt-2 rounded-md bg-emerald-50 px-2.5 py-2">
+                  <p className="text-[11px] font-semibold text-emerald-600">내가 스스로 한 점</p>
+                  <p className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-700">{artwork.self_description}</p>
+                </div>
+              )}
+            </>
           )}
           <div className="mt-3 flex items-center gap-2 border-t border-zinc-100 pt-2">
             <button

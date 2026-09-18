@@ -4,7 +4,7 @@ import { getCurrentUser, getScopedSupabaseClient } from "@/lib/auth/session";
 import { fetchArtworkList } from "@/lib/artworks";
 import { ARTWORK_BUCKET, artworkFilePath, artworkThumbnailPath } from "@/lib/storagePaths";
 import { fetchLinkPreviewImage } from "@/lib/ogImage";
-import { checkForAbusiveContent } from "@/lib/contentModeration";
+import { checkForAbusiveContent, flaggedContentMessage } from "@/lib/contentModeration";
 import { detectArtworkType } from "@/lib/artworkTypes";
 import type { ArtworkType } from "@/types/database";
 
@@ -96,9 +96,7 @@ export async function POST(req: NextRequest) {
   if (moderation.flagged) {
     return NextResponse.json(
       {
-        error: moderation.reason
-          ? `욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요. (${moderation.reason})`
-          : "욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요.",
+        error: flaggedContentMessage(moderation),
         code: "CONTENT_FLAGGED",
       },
       { status: 400 },

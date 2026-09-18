@@ -45,3 +45,9 @@ export async function checkForAbusiveContent(text: string): Promise<ModerationRe
     return { flagged: false, reason: null };
   }
 }
+
+/** 비속어 검사에 걸렸을 때 학생에게 보여 줄 문구. 업로드와 수정이 같은 문구를 쓴다. */
+export function flaggedContentMessage(result: ModerationResult) {
+  const base = "욕설이나 비속어, 다른 사람에 대한 비난이 있는지 다시 확인해 주세요.";
+  return result.reason ? `${base} (${result.reason})` : base;
+}

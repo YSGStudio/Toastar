@@ -28,7 +28,7 @@ export function UploadSection({
     return (
       <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
         {phase === "posting"
-          ? "이번 기간에 작품을 올렸어요. 투표가 시작될 때까지 기다려 주세요!"
+          ? "이번 기간에 작품을 올렸어요. 투표가 시작되기 전까지는 작품을 눌러 고치거나 지울 수 있어요."
           : "이번 기간에 작품을 올렸어요. 지금은 투표 기간이에요!"}
       </div>
     );

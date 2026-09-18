@@ -14,6 +14,8 @@ export interface ArtworkListItem extends Omit<Artwork, "like_count"> {
   liked_by_me: boolean;
   is_winner: boolean;
   can_manage: boolean;
+  /** 학생 본인 작품이고 아직 게시 단계라 고치거나 지울 수 있는지. */
+  can_edit: boolean;
   file_url: string;
   thumbnail_url: string | null;
 }

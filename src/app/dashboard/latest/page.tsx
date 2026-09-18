@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { fetchArtworkList } from "@/lib/artworks";
-import { fetchCurrentPeriod, fetchOngoingPeriods } from "@/lib/periods";
+import { fetchCurrentPeriod } from "@/lib/periods";
 import { getHeartStatus } from "@/lib/heartStatus";
 import { ArtworkGrid } from "@/components/ArtworkGrid";
 import { PhaseNotice } from "@/components/PhaseNotice";
@@ -13,52 +13,29 @@ export default async function LatestPage() {
 
   const isStudent = user.role === "student";
 
-  // 학생 화면은 지금이 게시 단계인지 투표 단계인지에 따라 올리기·하트가 갈린다.
-  // 교사는 담당(관리자는 전체) 학급의 진행 중인 기간을 모두 본다.
+  // 기간은 전교 공통이라 학생·교사 모두 같은 단계를 본다.
   // (레이아웃도 같은 조회를 쓰지만 cache()로 묶여 있어 한 번만 실행된다)
-  const [artworks, period, ongoingPeriods, heart] = await Promise.all([
+  const [artworks, period, heart] = await Promise.all([
     fetchArtworkList(user, { scope: "latest" }),
-    isStudent ? fetchCurrentPeriod(user, user.classId) : Promise.resolve(null),
-    isStudent ? Promise.resolve([]) : fetchOngoingPeriods(user),
+    fetchCurrentPeriod(user),
     getHeartStatus(user),
   ]);
 
   const phase = period?.phase ?? null;
   const alreadyPosted = isStudent && artworks.some((a) => a.student_id === user.studentId);
-
-  // 교사는 학급 구분 없이 투표하므로, 투표 단계인 기간이 하나라도 있으면 하트를 줄 수 있다.
-  const canLike = isStudent
-    ? phase === "voting"
-    : ongoingPeriods.some((p) => p.phase === "voting");
+  // 투표 단계면 학생·교사 누구나 학급 구분 없이 하트를 줄 수 있다.
+  const canLike = phase === "voting";
 
   return (
     <div className="space-y-6">
-      {isStudent ? (
-        period && (
-          <PhaseNotice
-            phase={period.phase}
-            startDate={period.start_date}
-            endDate={period.end_date}
-            viewerRole="student"
-            heartLimit={heart?.limit ?? 0}
-          />
-        )
-      ) : (
-        ongoingPeriods.length > 0 && (
-          <div className="space-y-2">
-            {ongoingPeriods.map((p) => (
-              <PhaseNotice
-                key={p.id}
-                phase={p.phase}
-                startDate={p.start_date}
-                endDate={p.end_date}
-                viewerRole="teacher"
-                classLabel={p.class_name}
-                heartLimit={heart?.limit ?? 0}
-              />
-            ))}
-          </div>
-        )
+      {period && (
+        <PhaseNotice
+          phase={period.phase}
+          startDate={period.start_date}
+          endDate={period.end_date}
+          viewerRole={isStudent ? "student" : "teacher"}
+          heartLimit={heart?.limit ?? 0}
+        />
       )}
       {isStudent && <UploadSection phase={phase} alreadyPosted={alreadyPosted} />}
       <ArtworkGrid

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { aggregateClassRankings } from "@/lib/rankings";
 import type { PeriodPhase } from "@/types/database";
 
 /** 단계는 게시 → 투표 → 종료 순서로 한 칸씩만 넘어간다(되돌리거나 건너뛸 수 없다). */
@@ -46,5 +47,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ period: data });
+
+  // 투표를 종료하면 곧바로 학급별 순위(10등까지)를 선정한다. 선정에 실패해도(하트 받은 작품이
+  // 없는 경우 등) 종료는 이미 끝난 일이라 되돌리지 않고, 결과만 알려 운영자가 다시 집계하게 한다.
+  const ranking = phase === "closed" ? await aggregateClassRankings(supabase) : null;
+
+  return NextResponse.json({ period: data, ranking });
 }

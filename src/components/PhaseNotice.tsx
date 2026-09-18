@@ -34,15 +34,12 @@ export function PhaseNotice({
   startDate,
   endDate,
   viewerRole,
-  classLabel,
   heartLimit,
 }: {
   phase: PeriodPhase;
   startDate: string;
   endDate: string;
   viewerRole: "student" | "teacher";
-  /** 여러 학급을 함께 보는 교사 화면에서만 붙인다. */
-  classLabel?: string | null;
   /** 지금 열려 있는 투표 전체에 쓸 수 있는 하트 수(사람당 총량). */
   heartLimit: number;
 }) {
@@ -52,7 +49,6 @@ export function PhaseNotice({
   return (
     <div className={`rounded-2xl px-4 py-3 ${tone}`}>
       <p className="text-sm font-semibold">
-        {classLabel && <span>{classLabel} · </span>}
         {label} · {formatDate(startDate)} ~ {formatDate(endDate)}
       </p>
       {hint && <p className="mt-0.5 text-xs opacity-80">{hint}</p>}

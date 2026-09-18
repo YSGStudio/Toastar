@@ -54,11 +54,11 @@ export function SettingsTabs({
       </div>
 
       {accountRole === "admin" && tab === "기간 관리" && (
-        <PeriodManager classId={classRow.id} periods={periods} />
+        <PeriodManager periods={periods} />
       )}
       {accountRole === "admin" && tab === "하트 정책" && <HeartLimitForm heartLimit={heartLimit} />}
       {accountRole === "admin" && tab === "로그인 차단" && (
-        <LoginBlockRulesForm classId={classRow.id} rules={loginBlockRules} />
+        <LoginBlockRulesForm rules={loginBlockRules} />
       )}
       {accountRole === "teacher" && tab === "학생 관리" && (
         <StudentManager classId={classRow.id} initialStudents={students} />

@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
 
   const now = new Date();
   const dayType = resolveDayType(now, TIME_ZONE);
+  // 차단 규칙은 전교 공통이다(학급 구분 없이 평일·주말 하나씩).
   const { data: rule } = await admin
     .from("login_block_rules")
     .select("enabled, start_time, end_time")
-    .eq("class_id", classRow.id)
     .eq("day_type", dayType)
     .maybeSingle();
 

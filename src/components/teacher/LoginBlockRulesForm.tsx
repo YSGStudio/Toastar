@@ -20,13 +20,7 @@ function toRuleState(rule: LoginBlockRule | undefined): RuleState {
 
 const LABELS: Record<DayType, string> = { weekday: "평일 (월~금)", weekend: "주말 (토~일)" };
 
-export function LoginBlockRulesForm({
-  classId,
-  rules,
-}: {
-  classId: string;
-  rules: LoginBlockRule[];
-}) {
+export function LoginBlockRulesForm({ rules }: { rules: LoginBlockRule[] }) {
   const router = useRouter();
   const [weekday, setWeekday] = useState(toRuleState(rules.find((r) => r.day_type === "weekday")));
   const [weekend, setWeekend] = useState(toRuleState(rules.find((r) => r.day_type === "weekend")));
@@ -42,7 +36,6 @@ export function LoginBlockRulesForm({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          classId,
           rules: [
             { dayType: "weekday", ...weekday },
             { dayType: "weekend", ...weekend },
@@ -96,7 +89,7 @@ export function LoginBlockRulesForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-base font-bold">학생 로그인 차단 시간</h2>
-      <p className="text-xs text-zinc-500">차단 시간에 학생이 로그인하면 &quot;로그인이 불가능합니다.&quot; 안내가 표시됩니다. 교사 로그인에는 적용되지 않습니다.</p>
+      <p className="text-xs text-zinc-500">모든 학급 학생에게 똑같이 적용돼요. 차단 시간에 학생이 로그인하면 &quot;로그인이 불가능합니다.&quot; 안내가 표시됩니다. 교사 로그인에는 적용되지 않습니다.</p>
       {renderRule("weekday", weekday, setWeekday)}
       {renderRule("weekend", weekend, setWeekend)}
       {saved && <p className="text-sm text-emerald-600">저장되었습니다.</p>}

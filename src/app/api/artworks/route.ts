@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     client
       .from("periods")
       .select("id, phase")
-      .eq("class_id", user.classId)
+      // 기간은 전교 공통이다. 진행 중인 기간은 하나뿐이다.
       .neq("phase", "closed")
       .maybeSingle(),
   ]);

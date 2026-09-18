@@ -37,9 +37,10 @@ export default async function SettingsPage({
 
   const [periods, { data: voteSettings }, { data: loginBlockRules }, { data: rankings }, { data: students }, { data: titlePresets }] =
     await Promise.all([
-      fetchPeriods({ classId: classRow.id }),
+      // 기간과 로그인 차단은 전교 공통이라 고른 학급과 무관하게 같은 값을 보여 준다.
+      fetchPeriods(),
       supabase.from("vote_settings").select("heart_limit").maybeSingle(),
-      supabase.from("login_block_rules").select("*").eq("class_id", classRow.id),
+      supabase.from("login_block_rules").select("*"),
       supabase
         .from("award_records")
         .select("id, period_id, rank, heart_count, awarded_at, artworks(title), students(name), periods(start_date, end_date)")

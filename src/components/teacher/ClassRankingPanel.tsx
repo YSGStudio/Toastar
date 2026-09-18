@@ -87,7 +87,7 @@ export function ClassRankingPanel({
 
   async function handleAggregate() {
     const ok = confirm(
-      "투표가 끝난 모든 학급을 집계할까요?\n학급마다 가장 최근에 끝난 기간을 하트 순으로 다시 계산해 덮어써요.",
+      "가장 최근에 끝난 기간을 학급별로 집계할까요?\n이미 집계했다면 다시 계산해 덮어써요.",
     );
     if (!ok) return;
     setLoading(true);
@@ -118,14 +118,14 @@ export function ClassRankingPanel({
             disabled={loading}
             className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            {loading ? "집계 중..." : "전체 학급 집계"}
+            {loading ? "집계 중..." : "다시 집계"}
           </button>
         )}
       </div>
 
       {canAggregate && (
         <p className="text-xs text-zinc-500">
-          투표가 끝난 학급마다 가장 최근 기간을 하트 순으로 정렬해 상위 10명을 뽑아요. 동점은 같은 순위로 함께
+          투표를 종료하면 학급별로 하트 순 상위 10명이 자동으로 선정돼요. 다시 집계하면 가장 최근에 끝난 기간을 다시 계산해요. 동점은 같은 순위로 함께
           올라가서 10명을 넘을 수 있어요. 각 학급 선생님은 환경설정 첫 화면에서 자기 반 순위를 봅니다.
         </p>
       )}
@@ -136,7 +136,7 @@ export function ClassRankingPanel({
         <p className="rounded-md bg-zinc-50 px-3 py-6 text-center text-sm text-zinc-400">
           {canAggregate
             ? "이 학급은 아직 집계된 순위가 없어요."
-            : "아직 집계된 순위가 없어요. 투표가 끝나고 운영자가 집계하면 여기에 표시돼요."}
+            : "아직 선정된 순위가 없어요. 운영자가 투표를 종료하면 여기에 표시돼요."}
         </p>
       ) : (
         <section className="space-y-1">

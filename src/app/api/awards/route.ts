@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
-
-/** 학급마다 순위표에 올리는 인원. 동점은 같은 순위라 이보다 많아질 수 있다. */
-const RANKING_SIZE = 10;
+import { aggregateClassRankings } from "@/lib/rankings";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -27,10 +25,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ awards: data });
 }
 
-/**
- * 투표가 끝난 모든 학급을 한 번에 집계한다.
- * 학급마다 가장 최근에 끝난 기간을 골라 하트 순으로 상위 10명을 뽑는다(DB 함수가 한 트랜잭션으로 처리).
- */
+/** 가장 최근에 끝난 기간을 다시 집계한다. 투표 종료 때 자동으로 한 번 집계되고, 이건 다시 계산할 때 쓴다. */
 export async function POST() {
   const user = await getCurrentUser();
   if (!user || user.role !== "teacher" || user.accountRole !== "admin") {
@@ -38,25 +33,9 @@ export async function POST() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("aggregate_class_rankings", { p_size: RANKING_SIZE });
-
-  if (error) {
-    if (error.message.includes("ADMIN_ONLY")) {
-      return NextResponse.json({ error: "관리자만 순위를 집계할 수 있습니다." }, { status: 403 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  const result = await aggregateClassRankings(supabase);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.adminOnly ? 403 : 400 });
   }
-
-  const results = (data ?? []) as { result_class_id: string; ranked_count: number }[];
-  if (results.length === 0) {
-    return NextResponse.json(
-      { error: "집계할 수 있는 기간이 없어요. 투표가 끝난 기간에 하트를 받은 작품이 있어야 해요." },
-      { status: 400 },
-    );
-  }
-
-  return NextResponse.json({
-    classCount: results.length,
-    studentCount: results.reduce((sum, r) => sum + r.ranked_count, 0),
-  });
+  return NextResponse.json({ classCount: result.classCount, studentCount: result.studentCount });
 }

@@ -29,20 +29,15 @@ export interface Student {
   created_at: string;
 }
 
+/** 기간은 전교 공통이다(학급마다 따로 두지 않는다). */
 export interface Period {
   id: string;
-  class_id: string;
   start_date: string;
   end_date: string;
   phase: PeriodPhase;
   /** phase에서 파생되는 값(closed면 closed, 그 외 active). DB의 생성 열이라 직접 쓰지 않는다. */
   status: PeriodStatus;
   created_at: string;
-}
-
-/** 진행 중인 기간 목록에 학급 이름을 붙인 형태(최신 자료 화면의 기간 안내에 쓴다). */
-export interface PeriodWithClassName extends Period {
-  class_name: string | null;
 }
 
 export interface Artwork {
@@ -108,9 +103,9 @@ export interface AwardRecord {
   awarded_at: string;
 }
 
+/** 로그인 차단 규칙은 전교 공통이다. 평일·주말마다 하나씩이다. */
 export interface LoginBlockRule {
   id: string;
-  class_id: string;
   day_type: DayType;
   enabled: boolean;
   start_time: string; // HH:MM:SS

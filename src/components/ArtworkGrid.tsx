@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArtworkCard } from "@/components/ArtworkCard";
 import { ArtworkDetailModal } from "@/components/ArtworkDetailModal";
@@ -39,6 +39,8 @@ export function ArtworkGrid({
   fetchUrl,
   canLike,
   currentStudentId,
+  currentClassId,
+  showClassTabs,
   emptyMessage,
   pollIntervalMs,
 }: {
@@ -46,6 +48,10 @@ export function ArtworkGrid({
   fetchUrl: string;
   canLike: boolean;
   currentStudentId?: string | null;
+  /** 학생이면 자기 학급. 그 학급 탭이 먼저 열린다. */
+  currentClassId?: string | null;
+  /** 작품을 학급 탭으로 나눠 보여 줄지. '내 작품'처럼 한 학급만 나오는 화면에서는 끈다. */
+  showClassTabs?: boolean;
   emptyMessage: string;
   /** 지정하면 이 주기(ms)마다 목록을 다시 불러온다. 최신 자료 화면에서만 사용한다. */
   pollIntervalMs?: number;
@@ -55,7 +61,8 @@ export function ArtworkGrid({
   const [notice, setNotice] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [prevInitialArtworks, setPrevInitialArtworks] = useState(initialArtworks);
-  const { decrementHeart, incrementHeart, syncHeart } = useHeart();
+  const { decrementHeart, incrementHeart, syncHeart, selectedClassId, setSelectedClassId, remainingFor } =
+    useHeart();
   const router = useRouter();
   // 전송 중인 하트 요청. 연타로 같은 작품에 두 번 요청이 나가면 서버가 409로 거절하는데,
   // 그때 낙관적 반영을 되돌리면 실제로는 차감된 하트가 화면에서만 되살아난다.
@@ -73,6 +80,26 @@ export function ArtworkGrid({
   function canLikeArtwork(artwork: ArtworkListItem) {
     return canLike && artwork.student_id !== currentStudentId && !artwork.liked_by_me;
   }
+
+  // 작품이 올라온 학급만 탭으로 만든다. 이름순으로 둬야 탭 순서가 들쭉날쭉하지 않다.
+  const classTabs = useMemo(() => {
+    if (!showClassTabs) return [];
+    const byId = new Map<string, string>();
+    for (const a of artworks) byId.set(a.class_id, a.class_name ?? "이름 없는 학급");
+    return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  }, [artworks, showClassTabs]);
+
+  // 열려 있던 탭의 학급이 목록에서 사라지면(기간이 바뀌는 등) 내 학급, 없으면 첫 탭으로 옮긴다.
+  useEffect(() => {
+    if (classTabs.length === 0) return;
+    if (selectedClassId && classTabs.some((c) => c.id === selectedClassId)) return;
+    const fallback = classTabs.find((c) => c.id === currentClassId)?.id ?? classTabs[0].id;
+    setSelectedClassId(fallback);
+  }, [classTabs, selectedClassId, currentClassId, setSelectedClassId]);
+
+  // 탭을 쓰는 화면에서는 열려 있는 학급 작품만 보여 준다.
+  const visibleArtworks =
+    showClassTabs && selectedClassId ? artworks.filter((a) => a.class_id === selectedClassId) : artworks;
 
   const refresh = useCallback(async () => {
     // 하트 요청이 처리되는 중에는 서버 응답이 아직 그 하트를 모르기 때문에 목록을 덮어쓰지 않는다.
@@ -118,7 +145,7 @@ export function ArtworkGrid({
     setNotice(null);
 
     applyToArtwork(artwork.id, (a) => ({ ...a, liked_by_me: true, like_count: shiftCount(a.like_count, 1) }));
-    decrementHeart();
+    decrementHeart(artwork.class_id);
 
     try {
       const res = await fetch(`/api/artworks/${artwork.id}/like`, { method: "POST" });
@@ -145,21 +172,21 @@ export function ArtworkGrid({
         // 하트가 왜 되돌아갔는지 학생이 알 수 있도록 서버 메시지를 그대로 보여준다.
         setNotice(
           data.code === "HEART_LIMIT"
-            ? "이번 기간에 줄 수 있는 하트를 모두 사용했어요"
+            ? "이 학급에 줄 수 있는 하트를 모두 사용했어요"
             : (data.error ?? "하트를 주지 못했어요. 잠시 후 다시 시도해 주세요."),
         );
       }
 
       // 성공·실패와 무관하게 서버가 알려준 실제 잔량으로 맞춘다.
       if (data.heart) syncHeart(data.heart);
-      else if (data.code !== "ALREADY_LIKED") incrementHeart();
+      else if (data.code !== "ALREADY_LIKED") incrementHeart(artwork.class_id);
     } catch {
       applyToArtwork(artwork.id, (a) => ({
         ...a,
         liked_by_me: false,
         like_count: shiftCount(a.like_count, -1),
       }));
-      incrementHeart();
+      incrementHeart(artwork.class_id);
       setNotice("네트워크 상태를 확인해 주세요.");
     } finally {
       pendingLikeIds.current.delete(artwork.id);
@@ -210,14 +237,40 @@ export function ArtworkGrid({
           {notice}
         </div>
       )}
-      {artworks.length === 0 ? (
+      {classTabs.length > 1 && (
+        <div className="mb-3 flex gap-1 overflow-x-auto pb-1 text-sm">
+          {classTabs.map((tab) => {
+            const remaining = canLike ? remainingFor(tab.id) : null;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedClassId(tab.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 font-medium ${
+                  tab.id === selectedClassId
+                    ? "bg-[#6C5CE7] text-white"
+                    : "bg-zinc-100 text-zinc-500"
+                }`}
+              >
+                {tab.name}
+                {remaining !== null && (
+                  <span className={tab.id === selectedClassId ? "ml-1.5 opacity-80" : "ml-1.5 text-[#ED4956]"}>
+                    ♥ {remaining}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {visibleArtworks.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16">
           <CloudDoodle className="h-20 w-24 text-violet-200" />
           <p className="text-center text-sm text-zinc-400">{emptyMessage}</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-6">
-          {artworks.map((artwork) => (
+          {visibleArtworks.map((artwork) => (
             <ArtworkCard
               key={artwork.id}
               artwork={artwork}

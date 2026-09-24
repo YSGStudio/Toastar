@@ -42,9 +42,10 @@ export function HeartLimitForm({
     <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-base font-bold">하트 정책</h2>
       <label className="block text-sm text-zinc-600">
-        1인이 한 번의 투표에 쓸 수 있는 하트 수
+        1인이 한 학급에 쓸 수 있는 하트 수
         <span className="mt-0.5 block text-xs text-zinc-400">
-          학생과 선생님 모두에게 같이 적용돼요. 학급 구분 없이 이 개수만 쓸 수 있고,
+          학생과 선생님 모두에게 같이 적용돼요. 학급마다 이 개수만큼 따로 쓸 수 있어서,
+          작품이 올라온 학급이 많을수록 한 사람이 주는 하트 총량도 늘어나요.
           투표가 끝나면 다음 투표에 다시 채워져요. (전교 공통 설정)
         </span>
         <input

@@ -22,8 +22,8 @@ function hintFor(phase: PeriodPhase, viewerRole: "student" | "teacher", heartLim
   }
   if (phase === "voting") {
     return viewerRole === "student"
-      ? `하트 ${heartLimit}개를 학급 구분 없이 나눠 주세요. 올린 친구 이름과 하트 수는 투표가 끝나면 공개돼요.`
-      : `하트 ${heartLimit}개를 마음에 드는 작품에 나눠 주세요. 학급 구분 없이 쓸 수 있어요.`;
+      ? `학급마다 하트 ${heartLimit}개씩 줄 수 있어요. 올린 친구 이름과 하트 수는 투표가 끝나면 공개돼요.`
+      : `학급마다 하트 ${heartLimit}개씩 줄 수 있어요. 학급 탭을 옮겨 가며 투표하세요.`;
   }
   return null;
 }

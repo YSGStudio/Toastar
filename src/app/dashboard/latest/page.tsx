@@ -43,6 +43,8 @@ export default async function LatestPage() {
         fetchUrl="/api/artworks?scope=latest"
         canLike={canLike}
         currentStudentId={isStudent ? user.studentId : null}
+        currentClassId={isStudent ? user.classId : null}
+        showClassTabs
         emptyMessage="아직 게시된 작품이 없어요."
         // 새 작품과 하트 수를 주기적으로 받아온다. 이 폴링이 서명 URL도 함께 갈아끼우므로
         // 화면을 오래 열어 두어도 이미지·PDF가 만료되지 않는다. 교사는 더 느린 주기면 충분하다.

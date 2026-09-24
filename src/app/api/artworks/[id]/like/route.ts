@@ -40,7 +40,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (error) {
     if (error.message.includes("HEART_LIMIT_EXCEEDED")) {
       return NextResponse.json(
-        { error: "이번 투표에 줄 수 있는 하트를 모두 사용했어요.", code: "HEART_LIMIT", heart },
+        { error: "이 학급에 줄 수 있는 하트를 모두 사용했어요.", code: "HEART_LIMIT", heart },
         { status: 429 },
       );
     }

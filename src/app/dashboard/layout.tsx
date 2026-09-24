@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const heartStatus = await getHeartStatus(user);
 
   return (
-    <HeartProvider initial={heartStatus}>
+    <HeartProvider initial={heartStatus} defaultClassId={user.role === "student" ? user.classId : null}>
       {user.role === "student" && <EthicsGuideGate />}
       <div className="flex flex-1 flex-col bg-white">
         <DashboardNav user={user} />

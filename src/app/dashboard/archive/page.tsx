@@ -31,6 +31,8 @@ export default async function ArchivePage({
           initialArtworks={artworks}
           fetchUrl={`/api/artworks?scope=archive&periodId=${selectedId}`}
           canLike={false}
+          currentClassId={user.role === "student" ? user.classId : null}
+          showClassTabs
           emptyMessage="이 기간에는 게시된 작품이 없어요."
         />
       )}

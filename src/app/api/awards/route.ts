@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ awards: data });
 }
 
-/** 가장 최근에 끝난 기간을 다시 집계한다. 투표 종료 때 자동으로 한 번 집계되고, 이건 다시 계산할 때 쓴다. */
+/** 가장 최근에 연 기간(끝난 것 중)을 다시 집계한다. 투표 종료 때 자동으로 한 번 집계되고, 이건 다시 계산할 때 쓴다. */
 export async function POST() {
   const user = await getCurrentUser();
   if (!user || user.role !== "teacher" || user.accountRole !== "admin") {

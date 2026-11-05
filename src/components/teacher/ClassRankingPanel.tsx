@@ -87,7 +87,7 @@ export function ClassRankingPanel({
 
   async function handleAggregate() {
     const ok = confirm(
-      "가장 최근에 끝난 기간을 학급별로 집계할까요?\n이미 집계했다면 다시 계산해 덮어써요.",
+      "가장 최근에 연 기간을 학급별로 집계할까요?\n이미 집계했다면 다시 계산해 덮어써요.",
     );
     if (!ok) return;
     setLoading(true);
@@ -125,7 +125,7 @@ export function ClassRankingPanel({
 
       {canAggregate && (
         <p className="text-xs text-zinc-500">
-          투표를 종료하면 학급별로 하트 순 상위 10명이 자동으로 선정돼요. 다시 집계하면 가장 최근에 끝난 기간을 다시 계산해요. 동점은 같은 순위로 함께
+          투표를 종료하면 학급별로 하트 순 상위 10명이 자동으로 선정돼요. 다시 집계하면 가장 최근에 연 기간을 다시 계산해요. 동점은 같은 순위로 함께
           올라가서 10명을 넘을 수 있어요. 각 학급 선생님은 환경설정 첫 화면에서 자기 반 순위를 봅니다.
         </p>
       )}
